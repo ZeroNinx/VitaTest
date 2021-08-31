@@ -1,0 +1,6 @@
+.vs
+.vscode
+build/*
+
+!src/
+!sce_sys/
