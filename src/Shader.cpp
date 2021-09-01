@@ -60,6 +60,7 @@ Shader::Shader(std::string&& VertexPath, string&& FragmentPath,string& Log)
 		Log+="\n";
 		return;
 	}
+	Log+="Vertex shader compile success.\n";
 
 	// 片段着色器
 	FragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -75,6 +76,7 @@ Shader::Shader(std::string&& VertexPath, string&& FragmentPath,string& Log)
 		Log += ErrMsg;
 		return;
 	}
+	Log+="Fragment shader compile success.\n";
 
 	// 着色器程序
 	ID = glCreateProgram();
@@ -91,9 +93,12 @@ Shader::Shader(std::string&& VertexPath, string&& FragmentPath,string& Log)
 		Log += ErrMsg;
 		return;
 	}
+	Log+="Shader program link success.\n";
 
 	//标记创建成功
 	bSuccessfulInit = true;
+
+	Log+="Shader Init success.\n";
 }
 
 void Shader::Use()

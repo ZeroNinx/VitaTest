@@ -82,9 +82,9 @@ glm::vec3 cubePositions[] = {
 void PrintMsg(const char *Msg)
 {
 	GlobalLog += Msg;
+	vglEnd();
 	psvDebugScreenInit();
 	psvDebugScreenPrintf("%s", GlobalLog.c_str());
-	vglEnd();
 	sceKernelDelayThread(300 * 1000000);
 	sceKernelExitProcess(0);
 }
@@ -107,27 +107,20 @@ int main()
 	DrawShader = new Shader(GetContentPath("Shader/VertexShader.cg"), GetContentPath("Shader/FragmentShader.cg"), GlobalLog);
 	if (!DrawShader->bSuccessfulInit)
 	{
-		vglEnd();
 		PrintMsg("Shader Compile Failed");
 		return 0;
 	}
 	DrawShader->Use();
 
-	
-
 	//绑定Location对应的变量
 	glBindAttribLocation(DrawShader->GetID(), 0, "aPos");
 	glBindAttribLocation(DrawShader->GetID(), 1, "aTexCoord");
-
-
 
 	//创建VBO
 	glGenBuffers(1, &VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-
-
+	GlobalLog += "VBO generate success\n";
 
 	//读取纹理
 	int TextureWidth, TextureHeight, TextureChannel;
@@ -152,6 +145,8 @@ int main()
 	//导入纹理
 	glUniform1i(glGetUniformLocation(DrawShader->GetID(), "BoxTexture"), 0);
 
+	GlobalLog += "Box texture generate success\n";
+
 	//读取纹理2
 	Data = stbi_load(GetContentPath("face.png").c_str(), &TextureWidth, &TextureHeight, &TextureChannel, 0);
 	if (!Data)
@@ -174,6 +169,8 @@ int main()
 	//导入纹理2
 	glUniform1i(glGetUniformLocation(DrawShader->GetID(), "FaceTexture"), 1);
 
+	GlobalLog += "Face texture generate success\n";
+
 	//模型矩阵（内部坐标->世界坐标）
 	glm::mat4 ModelMat(1.0f);
 	ModelMat = glm::rotate(ModelMat, glm::radians(-55.0f), glm::vec3(1.0f, 0, 0));
@@ -187,15 +184,18 @@ int main()
 	ProjMat = glm::perspective(glm::radians(45.0f), (float)960 / (float)544, 0.1f, 100.0f);
 
 	//把变量Uniform到Shader
-	glUniformMatrix4fv(glGetUniformLocation(DrawShader->GetID(), "ModelMat"), 1, GL_FALSE, glm::value_ptr(ModelMat));
-	glUniformMatrix4fv(glGetUniformLocation(DrawShader->GetID(), "ViewMat"), 1, GL_FALSE, glm::value_ptr(ViewMat));
-	glUniformMatrix4fv(glGetUniformLocation(DrawShader->GetID(), "ProjMat"), 1, GL_FALSE, glm::value_ptr(ProjMat));
+	glUniformMatrix4fv(glGetUniformLocation(DrawShader->GetID(), "ModelMat"), 1, GL_TRUE, glm::value_ptr(ModelMat));
+	glUniformMatrix4fv(glGetUniformLocation(DrawShader->GetID(), "ViewMat"), 1, GL_TRUE, glm::value_ptr(ViewMat));
+	glUniformMatrix4fv(glGetUniformLocation(DrawShader->GetID(), "ProjMat"), 1, GL_TRUE, glm::value_ptr(ProjMat));
 
+	GlobalLog += "Matrix generate success\n";
+
+	GlobalLog += "\nPrepare to Draw.\n";
 
 	while (true)
 	{
 		//清除缓冲区
-		glClearColor(0.5, 0.5, 0.5, 1.0);
+		glClearColor(0.5, 1.0, 1.0, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		//绑定材质
@@ -219,10 +219,12 @@ int main()
 			ModelMat = glm::translate(ModelMat, cubePositions[i]);
 			ModelMat = glm::rotate(ModelMat, glm::radians(Angle), glm::vec3(1.0f, 0.3f, 0.5f));
 
-			glUniformMatrix4fv(glGetUniformLocation(DrawShader->GetID(), "ModelMat"), 1, GL_FALSE, glm::value_ptr(ModelMat));
+			glUniformMatrix4fv(glGetUniformLocation(DrawShader->GetID(), "ModelMat"), 1, GL_TRUE, glm::value_ptr(ModelMat));
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 			cnt++;
 		}
+
+		vglSwapBuffers(GL_FALSE);
 	}
 
 	vglEnd();
