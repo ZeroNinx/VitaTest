@@ -4,7 +4,7 @@ using namespace std;
 
 Shader::Shader(std::string&& VertexPath, string&& FragmentPath,string& Log)
 {
-	//±àÒë×ÅÉ«Æ÷
+	//ç¼–è¯‘ç€è‰²å™¨
 	unsigned int VertexShader, FragmentShader;
 	int Result;
 	char ErrMsg[512];
@@ -12,12 +12,12 @@ Shader::Shader(std::string&& VertexPath, string&& FragmentPath,string& Log)
 	const char *VertexShaderCode;
 	const char *FragmentShaderCode;
 
-	//´ÓÎÄ¼şÂ·¾¶ÖĞ»ñÈ¡¶¥µã/Æ¬¶Î×ÅÉ«Æ÷
+	//ä»æ–‡ä»¶è·¯å¾„ä¸­è·å–é¡¶ç‚¹/ç‰‡æ®µç€è‰²å™¨
 	fstream FS;
 	stringstream SS;
 	string VertexStr, FragStr;
 
-	//¶ÁÈ¡VertexShader
+	//è¯»å–VertexShader
 	FS.clear();
 	SS.str("");
 	FS.open(VertexPath, ios::in);
@@ -31,7 +31,7 @@ Shader::Shader(std::string&& VertexPath, string&& FragmentPath,string& Log)
 	VertexShaderCode = VertexStr.c_str();
 	FS.close();
 
-	//¶ÁÈ¡FragmentShader
+	//è¯»å–FragmentShader
 	FS.clear();
 	SS.str("");
 	FS.open(FragmentPath, ios::in);
@@ -45,12 +45,12 @@ Shader::Shader(std::string&& VertexPath, string&& FragmentPath,string& Log)
 	FragmentShaderCode = FragStr.c_str();
 	FS.close();
 
-	// ¶¥µã×ÅÉ«Æ÷
+	// é¡¶ç‚¹ç€è‰²å™¨
 	VertexShader = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(VertexShader, 1, &VertexShaderCode, NULL);
 	glCompileShader(VertexShader);
 
-	// ´òÓ¡±àÒë´íÎó£¨Èç¹ûÓĞµÄ»°£©
+	// æ‰“å°ç¼–è¯‘é”™è¯¯ï¼ˆå¦‚æœæœ‰çš„è¯ï¼‰
 	glGetShaderiv(VertexShader, GL_COMPILE_STATUS, &Result);
 	if (Result == GL_FALSE)
 	{
@@ -61,12 +61,12 @@ Shader::Shader(std::string&& VertexPath, string&& FragmentPath,string& Log)
 		return;
 	}
 
-	// Æ¬¶Î×ÅÉ«Æ÷
+	// ç‰‡æ®µç€è‰²å™¨
 	FragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(FragmentShader, 1, &FragmentShaderCode, NULL);
 	glCompileShader(FragmentShader);
 
-	// ´òÓ¡±àÒë´íÎó£¨Èç¹ûÓĞµÄ»°£©
+	// æ‰“å°ç¼–è¯‘é”™è¯¯ï¼ˆå¦‚æœæœ‰çš„è¯ï¼‰
 	glGetShaderiv(FragmentShader, GL_COMPILE_STATUS, &Result);
 	if (Result == GL_FALSE)
 	{
@@ -76,13 +76,13 @@ Shader::Shader(std::string&& VertexPath, string&& FragmentPath,string& Log)
 		return;
 	}
 
-	// ×ÅÉ«Æ÷³ÌĞò
+	// ç€è‰²å™¨ç¨‹åº
 	ID = glCreateProgram();
 	glAttachShader(ID, VertexShader);
 	glAttachShader(ID, FragmentShader);
 	glLinkProgram(ID);
 
-	// ´òÓ¡Á¬½Ó´íÎó£¨Èç¹ûÓĞµÄ»°£©
+	// æ‰“å°è¿æ¥é”™è¯¯ï¼ˆå¦‚æœæœ‰çš„è¯ï¼‰
 	glGetProgramiv(ID, GL_LINK_STATUS, &Result);
 	if (Result == GL_FALSE)
 	{
@@ -92,7 +92,7 @@ Shader::Shader(std::string&& VertexPath, string&& FragmentPath,string& Log)
 		return;
 	}
 
-	//±ê¼Ç´´½¨³É¹¦
+	//æ ‡è®°åˆ›å»ºæˆåŠŸ
 	bSuccessfulInit = true;
 }
 
