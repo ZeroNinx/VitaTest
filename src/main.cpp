@@ -100,7 +100,7 @@ int main()
 	glEnable(GL_DEPTH_TEST);
 
 	//初始化着色器
-	DrawShader = new Shader(GetContentPath("Shader/VertexShader.glsl"), GetContentPath("Shader/FragmentShader.glsl"), GlobalLog);
+	DrawShader = new Shader(GetContentPath("Shader/VertexShader.cg"), GetContentPath("Shader/FragmentShader.cg"), GlobalLog);
 	if (!DrawShader->bSuccessfulInit)
 	{
 		vglEnd();
