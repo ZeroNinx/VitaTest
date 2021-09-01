@@ -1,6 +1,6 @@
 void main
 (
-    float2 TexCoord,
+    float2 TexCoord: TEXCOORD0,
 
     float4 out FragColor : COLOR,
 
@@ -8,5 +8,5 @@ void main
     uniform sampler2D FaceTexture
 )
 {
-    FragColor = mix(texture(FaceTexture, TexCoord), texture(BoxTexture,TexCoord),0.7);
+    FragColor = tex2D(FaceTexture, TexCoord);
 }

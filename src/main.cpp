@@ -84,6 +84,7 @@ void PrintMsg(const char *Msg)
 	GlobalLog += Msg;
 	psvDebugScreenInit();
 	psvDebugScreenPrintf("%s", GlobalLog.c_str());
+	vglEnd();
 	sceKernelDelayThread(300 * 1000000);
 	sceKernelExitProcess(0);
 }
@@ -95,6 +96,9 @@ int main()
 
 	//初始化图形
 	vglInit(0x800000);
+
+	//启用运行时编译Shader
+	vglEnableRuntimeShaderCompiler(GL_TRUE);
 
 	//开启深度缓冲区
 	glEnable(GL_DEPTH_TEST);
@@ -109,14 +113,21 @@ int main()
 	}
 	DrawShader->Use();
 
+	
+
 	//绑定Location对应的变量
-	glBindAttribLocation(DrawShader->GetID(), 0, "In.aPos");
-	glBindAttribLocation(DrawShader->GetID(), 1, "In.aTexCoord");
+	glBindAttribLocation(DrawShader->GetID(), 0, "aPos");
+	glBindAttribLocation(DrawShader->GetID(), 1, "aTexCoord");
+
+
 
 	//创建VBO
 	glGenBuffers(1, &VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+
+
 
 	//读取纹理
 	int TextureWidth, TextureHeight, TextureChannel;
@@ -180,12 +191,13 @@ int main()
 	glUniformMatrix4fv(glGetUniformLocation(DrawShader->GetID(), "ViewMat"), 1, GL_FALSE, glm::value_ptr(ViewMat));
 	glUniformMatrix4fv(glGetUniformLocation(DrawShader->GetID(), "ProjMat"), 1, GL_FALSE, glm::value_ptr(ProjMat));
 
+
 	while (true)
 	{
 		//清除缓冲区
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glClearColor(0.5, 0.5, 0.5, 1.0);
-	
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 		//绑定材质
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, Texture);
