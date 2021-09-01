@@ -83,7 +83,7 @@ void PrintMsg(const char *Msg)
 {
 	GlobalLog += Msg;
 	psvDebugScreenInit();
-	psvDebugScreenPrintf("%s",GlobalLog.c_str());
+	psvDebugScreenPrintf("%s", GlobalLog.c_str());
 	sceKernelDelayThread(300 * 1000000);
 	sceKernelExitProcess(0);
 }
@@ -99,16 +99,8 @@ int main()
 	//开启深度缓冲区
 	glEnable(GL_DEPTH_TEST);
 
-	glGenBuffers(1, &VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
-
-	DrawShader = new Shader(GetContentPath("Shader/VertexShader.glsl"), GetContentPath("Shader/FragmentShader.glsl"),GlobalLog);
+	//初始化着色器
+	DrawShader = new Shader(GetContentPath("Shader/VertexShader.glsl"), GetContentPath("Shader/FragmentShader.glsl"), GlobalLog);
 	if (!DrawShader->bSuccessfulInit)
 	{
 		vglEnd();
@@ -117,13 +109,21 @@ int main()
 	}
 	DrawShader->Use();
 
+	//绑定Location对应的变量
+	glBindAttribLocation(DrawShader->GetID(), 0, "In.aPos");
+	glBindAttribLocation(DrawShader->GetID(), 1, "In.aTexCoord");
+
+	//创建VBO
+	glGenBuffers(1, &VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
 	//读取纹理
 	int TextureWidth, TextureHeight, TextureChannel;
 	unsigned char *Data = stbi_load(GetContentPath("box.jpg").c_str(), &TextureWidth, &TextureHeight, &TextureChannel, 0);
 	if (!Data)
 	{
-		vglEnd();
-		PrintMsg("Texture read Failed");
+		PrintMsg("Box texture read Failed");
 		return 0;
 	}
 
@@ -145,7 +145,7 @@ int main()
 	Data = stbi_load(GetContentPath("face.png").c_str(), &TextureWidth, &TextureHeight, &TextureChannel, 0);
 	if (!Data)
 	{
-		vglEnd();
+		PrintMsg("Face texture read Failed");
 		return 0;
 	}
 
@@ -182,21 +182,28 @@ int main()
 
 	while (true)
 	{
-		glClear(GL_COLOR_BUFFER_BIT);
-
-		glClearColor(0.5, 0.5, 0.5, 1.0);
+		//清除缓冲区
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+		glClearColor(0.5, 0.5, 0.5, 1.0);
+	
 		//绑定材质
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, Texture);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, Texture2);
+
+		//绑定顶点到Location
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
+		glEnableVertexAttribArray(0);
+		glEnableVertexAttribArray(1);
+
+		//绘制10个盒子
 		for (int i = 0; i < 10; i++)
 		{
 			float Angle = fmod(20.0f * i + 0.01 * cnt, 360.0f);
 
-			glm::mat4 ModelMat(1.0f);
+			ModelMat = glm::mat4(1.0f);
 			ModelMat = glm::translate(ModelMat, cubePositions[i]);
 			ModelMat = glm::rotate(ModelMat, glm::radians(Angle), glm::vec3(1.0f, 0.3f, 0.5f));
 
@@ -207,4 +214,5 @@ int main()
 	}
 
 	vglEnd();
+	return 0;
 }

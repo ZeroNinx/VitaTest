@@ -1,0 +1,33 @@
+
+//输入
+struct InData
+{
+    float3 aPos,
+    float2 aTexCoord
+};
+
+//输出
+struct OutData
+{
+    float4 gl_Position : POSITION,
+    float2 TexCoord
+};
+
+//主函数
+OutData main
+(
+    InData In,
+
+    //Uniform
+    uniform float4x4 ModelMat,
+    uniform float4x4 ViewMat,
+    uniform float4x4 ProjMat,
+)
+{
+    OutData Out;
+    
+    Out.gl_Position = ProjMat * ViewMat * ModelMat * float4(In.aPos, 1.0);
+    Out.TexCoord = In.aTexCoord;
+
+    return Out;
+}

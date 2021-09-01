@@ -86,6 +86,6 @@ vita_create_vpk(${PROJECT_NAME}.vpk ${VITA_TITLEID} ${PROJECT_NAME}.self
 
   FILE sce_sys/livearea/contents/face.png sce_sys/livearea/contents/face.png 
   FILE sce_sys/livearea/contents/box.jpg sce_sys/livearea/contents/box.jpg
-  FILE sce_sys/livearea/contents/Shader/VertexShader.glsl sce_sys/livearea/contents/Shader/VertexShader.glsl
-  FILE sce_sys/livearea/contents/Shader/FragmentShader.glsl sce_sys/livearea/contents/Shader/FragmentShader.glsl
+  FILE sce_sys/livearea/contents/Shader/VertexShader.cg sce_sys/livearea/contents/Shader/VertexShader.cg
+  FILE sce_sys/livearea/contents/Shader/FragmentShader.cg sce_sys/livearea/contents/Shader/FragmentShader.cg
 )
