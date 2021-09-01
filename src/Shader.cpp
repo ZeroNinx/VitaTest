@@ -57,6 +57,7 @@ Shader::Shader(std::string&& VertexPath, string&& FragmentPath,string& Log)
 		glGetShaderInfoLog(VertexShader, 512, NULL, ErrMsg);
 		Log += "Vertex shader compile failed: \n";
 		Log += ErrMsg;
+		Log+="\n";
 		return;
 	}
 

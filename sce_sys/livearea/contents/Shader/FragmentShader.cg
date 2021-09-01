@@ -1,26 +1,12 @@
-//输入
-struct InData
-{
-    float2 TexCoord
-}
-
-//输出
-struct OutData
-{
-    float4 FragColor : COLOR
-}
-
-//主函数
-OutData main
+void main
 (
-    InData In,
-    
-    //Uniform
+    float2 TexCoord,
+
+    float4 out FragColor : COLOR,
+
     uniform sampler2D BoxTexture,
     uniform sampler2D FaceTexture
 )
 {
-    OutData Out;
-    FragColor = mix(texture(FaceTexture, In.TexCoord), texture(BoxTexture,In.TexCoord),0.7);
-    return Out;
+    FragColor = mix(texture(FaceTexture, TexCoord), texture(BoxTexture,TexCoord),0.7);
 }
