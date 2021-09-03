@@ -10,19 +10,19 @@ class Shader
 {
 public:
 	
-	// ¹¹ÔìÆ÷¶ÁÈ¡²¢¹¹½¨×ÅÉ«Æ÷
+	// æ„é€ å™¨è¯»å–å¹¶æ„å»ºç€è‰²å™¨
 	Shader(std::string&& VertexPath, std::string&& FragmentPath, std::string& Log);
 
-	// Ê¹ÓÃ/¼¤»î³ÌĞò
+	// ä½¿ç”¨/æ¿€æ´»ç¨‹åº
 	void Use();
 
-	// »ñÈ¡³ÌĞòID
+	// è·å–ç¨‹åºID
 	unsigned int GetID();
 
-	// É¾³ı×ÅÉ«Æ÷
+	// åˆ é™¤ç€è‰²å™¨
 	void Delete();
 
-	// ´«µİ²ÎÊı
+	// ä¼ é€’å‚æ•°
 	void SetBool(const std::string& name, bool value) const
 	{
 		glUniform1i(glGetUniformLocation(ID, name.c_str()), (int)value);
@@ -38,19 +38,19 @@ public:
 
 public:
 
-	// ³ÌĞòID
+	// ç¨‹åºID
 	unsigned int ID;
 
-	// ÊÇ·ñ³õÊ¼»¯³É¹¦
+	// æ˜¯å¦åˆå§‹åŒ–æˆåŠŸ
 	bool bSuccessfulInit = false;
 
-	// ÊÇ·ñ±àÒë³É¹¦
+	// æ˜¯å¦ç¼–è¯‘æˆåŠŸ
 	bool bSuccessfulCompile = false;
 
-	// ¶¥µã×ÅÉ«Æ÷
+	// é¡¶ç‚¹ç€è‰²å™¨
 	std::string VertexShaderCode;
 	
-	// Æ¬¶Î×ÅÉ«Æ÷
+	// ç‰‡æ®µç€è‰²å™¨
 	std::string FragmentShaderCode;
 
 };
