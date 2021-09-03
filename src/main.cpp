@@ -8,6 +8,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include "Shader.h"
+#include "Camera.h"
 #include "debugScreen.h"
 
 #include "util.h"
@@ -17,7 +18,8 @@ using namespace std;
 //日志
 string GlobalLog = "";
 
-Shader *DrawShader;
+Shader* DrawShader;
+Camera* PlayerCamera;
 unsigned int VBO, VAO, EBO;
 unsigned Texture, Texture2;
 int cnt = 0;
@@ -113,21 +115,14 @@ int main()
 	}
 	DrawShader->Use();
 
-	
-
 	//绑定Location对应的变量
 	glBindAttribLocation(DrawShader->GetID(), 0, "aPos");
 	glBindAttribLocation(DrawShader->GetID(), 1, "aTexCoord");
-
-
 
 	//创建VBO
 	glGenBuffers(1, &VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-
-
 
 	//读取纹理
 	int TextureWidth, TextureHeight, TextureChannel;
@@ -174,23 +169,8 @@ int main()
 	//导入纹理2
 	glUniform1i(glGetUniformLocation(DrawShader->GetID(), "FaceTexture"), 1);
 
-	//模型矩阵（内部坐标->世界坐标）
-	glm::mat4 ModelMat(1.0f);
-	ModelMat = glm::rotate(ModelMat, glm::radians(-55.0f), glm::vec3(1.0f, 0, 0));
-
-	//相机的反向矩阵（世界坐标->相机坐标）
-	glm::mat4 ViewMat(1.0f);
-	ViewMat = glm::translate(ViewMat, glm::vec3(0, 0, -3.0f));
-
-	//投影矩阵（相机坐标->投影坐标）
-	glm::mat4 ProjMat(1.0f);
-	ProjMat = glm::perspective(glm::radians(45.0f), (float)960 / (float)544, 0.1f, 100.0f);
-
-	//把变量Uniform到Shader
-	glUniformMatrix4fv(glGetUniformLocation(DrawShader->GetID(), "ModelMat"), 1, GL_FALSE, glm::value_ptr(ModelMat));
-	glUniformMatrix4fv(glGetUniformLocation(DrawShader->GetID(), "ViewMat"), 1, GL_FALSE, glm::value_ptr(ViewMat));
-	glUniformMatrix4fv(glGetUniformLocation(DrawShader->GetID(), "ProjMat"), 1, GL_FALSE, glm::value_ptr(ProjMat));
-
+	//创建相机
+	PlayerCamera = new Camera(glm::vec3(0, 0, 3.0f), glm::radians(5.0f),glm::radians(180.0f),0, glm::vec3(0, 1.0f, 0));
 
 	while (true)
 	{
@@ -209,6 +189,23 @@ int main()
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
 		glEnableVertexAttribArray(0);
 		glEnableVertexAttribArray(1);
+
+		//模型矩阵（内部坐标->世界坐标）
+		glm::mat4 ModelMat(1.0f);
+		ModelMat = glm::rotate(ModelMat, glm::radians(-55.0f), glm::vec3(1.0f, 0, 0));
+
+		//相机的反向矩阵（世界坐标->相机坐标）
+		glm::mat4 ViewMat(1.0f);
+		ViewMat = PlayerCamera->GetViewMatrix();
+
+		//投影矩阵（相机坐标->投影坐标）
+		glm::mat4 ProjMat(1.0f);
+		ProjMat = glm::perspective(glm::radians(45.0f), (float)960 / (float)544, 0.1f, 100.0f);
+
+		//把变量Uniform到Shader
+		glUniformMatrix4fv(glGetUniformLocation(DrawShader->GetID(), "ModelMat"), 1, GL_FALSE, glm::value_ptr(ModelMat));
+		glUniformMatrix4fv(glGetUniformLocation(DrawShader->GetID(), "ViewMat"), 1, GL_FALSE, glm::value_ptr(ViewMat));
+		glUniformMatrix4fv(glGetUniformLocation(DrawShader->GetID(), "ProjMat"), 1, GL_FALSE, glm::value_ptr(ProjMat));
 
 		//绘制10个盒子
 		for (int i = 0; i < 10; i++)
