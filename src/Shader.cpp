@@ -2,7 +2,7 @@
 
 using namespace std;
 
-Shader::Shader(std::string&& VertexPath, string&& FragmentPath,string& Log)
+Shader::Shader(std::string&& VertexPath, string&& FragmentPath)
 {
 	//编译着色器
 	unsigned int VertexShader, FragmentShader;
@@ -23,7 +23,7 @@ Shader::Shader(std::string&& VertexPath, string&& FragmentPath,string& Log)
 	FS.open(VertexPath, ios::in);
 	if (!FS.is_open())
 	{
-		Log += ("Vertex shader file open failed.\n");
+		sceClibPrintf("Vertex shader file open failed.\n");
 		return;
 	}
 	SS << FS.rdbuf();
@@ -37,7 +37,7 @@ Shader::Shader(std::string&& VertexPath, string&& FragmentPath,string& Log)
 	FS.open(FragmentPath, ios::in);
 	if (!FS.is_open())
 	{
-		Log += ("Fragment shader file open failed.\n");
+		sceClibPrintf("Fragment shader file open failed.\n");
 		return;
 	}
 	SS << FS.rdbuf();
@@ -55,12 +55,9 @@ Shader::Shader(std::string&& VertexPath, string&& FragmentPath,string& Log)
 	if (Result == GL_FALSE)
 	{
 		glGetShaderInfoLog(VertexShader, 512, NULL, ErrMsg);
-		Log += "Vertex shader compile failed: \n";
-		Log += ErrMsg;
-		Log+="\n";
+		sceClibPrintf("%s\n",ErrMsg);
 		return;
 	}
-	Log+="Vertex shader compile success.\n";
 
 	// 片段着色器
 	FragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -71,12 +68,10 @@ Shader::Shader(std::string&& VertexPath, string&& FragmentPath,string& Log)
 	glGetShaderiv(FragmentShader, GL_COMPILE_STATUS, &Result);
 	if (Result == GL_FALSE)
 	{
-		glGetShaderInfoLog(VertexShader, 512, NULL, ErrMsg);
-		Log += "Fragment shader compile failed: \n";
-		Log += ErrMsg;
+		glGetShaderInfoLog(FragmentShader, 512, NULL, ErrMsg);
+		sceClibPrintf("%s\n",ErrMsg);
 		return;
 	}
-	Log+="Fragment shader compile success.\n";
 
 	// 着色器程序
 	ID = glCreateProgram();
@@ -89,16 +84,12 @@ Shader::Shader(std::string&& VertexPath, string&& FragmentPath,string& Log)
 	if (Result == GL_FALSE)
 	{
 		glGetShaderInfoLog(VertexShader, 512, NULL, ErrMsg);
-		Log += "Shader program linking failed: ";
-		Log += ErrMsg;
+		sceClibPrintf("%s\n",ErrMsg);
 		return;
 	}
-	Log+="Shader program link success.\n";
 
 	//标记创建成功
 	bSuccessfulInit = true;
-
-	Log+="Shader Init success.\n";
 }
 
 void Shader::Use()

@@ -52,25 +52,24 @@ add_executable(${PROJECT_NAME}
   src/main.cpp
   src/Shader.cpp
   src/Camera.cpp
-  src/debugScreen.c
 )
 
 # Library to link to (drop the -l prefix). This will mostly be stubs.
 target_link_libraries(${PROJECT_NAME}
+
+  #Common
   c
   stdc++
-  vitaGL
-  SceCommonDialog_stub
-  m
-  SceGxm_stub
+
+  #SCE
   SceDisplay_stub
-  mathneon
-  SceAppMgr_stub
-  SceSysmodule_stub
-  vitashark
-  SceShaccCg_stub
-  SceVshBridge_stub
-  SceKernelDmacMgr_stub
+  SceDebugForDriver_stub
+
+  #PVR_PSP2
+  libIMGEGL_stub
+  libGLESv1_CM_stub
+  libGLESv2_stub
+  libgpu_es4_ext_stub
 )
 
 ## Create Vita files
@@ -80,13 +79,23 @@ vita_create_self(${PROJECT_NAME}.self ${PROJECT_NAME})
 vita_create_vpk(${PROJECT_NAME}.vpk ${VITA_TITLEID} ${PROJECT_NAME}.self
   VERSION ${VITA_VERSION}
   NAME ${VITA_APP_NAME}
+
+  #SCE
   FILE sce_sys/icon0.png sce_sys/icon0.png
   FILE sce_sys/livearea/contents/bg.png sce_sys/livearea/contents/bg.png
   FILE sce_sys/livearea/contents/startup.png sce_sys/livearea/contents/startup.png
   FILE sce_sys/livearea/contents/template.xml sce_sys/livearea/contents/template.xml
 
-  FILE sce_sys/livearea/contents/face.png sce_sys/livearea/contents/face.png 
-  FILE sce_sys/livearea/contents/box.jpg sce_sys/livearea/contents/box.jpg
-  FILE sce_sys/livearea/contents/Shader/VertexShader.cg sce_sys/livearea/contents/Shader/VertexShader.cg
-  FILE sce_sys/livearea/contents/Shader/FragmentShader.cg sce_sys/livearea/contents/Shader/FragmentShader.cg
+  #suprx
+  FILE data/libGLESv2.suprx libGLESv2.suprx
+  FILE data/libgpu_es4_ext.suprx libgpu_es4_ext.suprx
+  FILE data/libIMGEGL.suprx libIMGEGL.suprx
+
+  #Shader
+  FILE data/Shader/VertexShader.glsl data/Shader/VertexShader.glsl
+  FILE data/Shader/FragmentShader.glsl data/Shader/FragmentShader.glsl
+
+  #Resource
+  FILE data/Resource/face.png data/Resource/face.png 
+  FILE data/Resource/box.jpg data/Resource/box.jpg
 )

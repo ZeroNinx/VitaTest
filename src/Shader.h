@@ -1,6 +1,7 @@
 #pragma once
 
-#include <vitaGL.h>
+#include <PVR_PSP2/GLES2/gl2.h>
+#include <vitasdk.h>
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -11,7 +12,7 @@ class Shader
 public:
 	
 	// 构造器读取并构建着色器
-	Shader(std::string&& VertexPath, std::string&& FragmentPath, std::string& Log);
+	Shader(std::string&& VertexPath, std::string&& FragmentPath);
 
 	// 使用/激活程序
 	void Use();

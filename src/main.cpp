@@ -1,7 +1,18 @@
-#include <vitasdk.h>
-#include <vitaGL.h>
+#define __psp2__
+
+#include <psp2/kernel/processmgr.h>
+#include <PVR_PSP2/GLES2/gl2.h>
+#include <PVR_PSP2/EGL/eglplatform.h>
+#include <PVR_PSP2/EGL/egl.h>
+
+extern "C"
+{
+	#include <PVR_PSP2/gpu_es4/psp2_pvr_hint.h>
+}
+
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
 #include <fstream>
 #include <string>
 
@@ -9,14 +20,31 @@
 #include "stb_image.h"
 #include "Shader.h"
 #include "Camera.h"
-#include "debugScreen.h"
 
 #include "util.h"
 
 using namespace std;
 
-//日志
-string GlobalLog = "";
+//SCE
+int _newlib_heap_size_user   = 100 * 1024 * 1024;
+unsigned int sceLibcHeapSize = 50 * 1024 * 1024;
+
+//EGL
+EGLDisplay Display;
+EGLConfig Config;
+EGLSurface Surface;
+EGLContext Context;
+EGLint NumConfigs, MajorVersion, MinorVersion;
+EGLint ConfigAttr[] =
+{
+	EGL_BUFFER_SIZE, EGL_DONT_CARE,
+	EGL_DEPTH_SIZE, 16,
+	EGL_RED_SIZE, 8,
+	EGL_GREEN_SIZE, 8,
+	EGL_BLUE_SIZE, 8,
+	EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+	EGL_NONE
+};
 
 Shader* DrawShader;
 Camera* PlayerCamera;
@@ -24,6 +52,7 @@ unsigned int VBO, VAO, EBO;
 unsigned Texture, Texture2;
 int cnt = 0;
 
+//盒子的36个顶点
 float vertices[] =
 	{
 		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
@@ -81,35 +110,77 @@ glm::vec3 cubePositions[] = {
 	glm::vec3(1.5f, 0.2f, -1.5f),
 	glm::vec3(-1.3f, 1.0f, -1.5f)};
 
-void PrintMsg(const char *Msg)
+//SCEInit
+void SCEInit()
 {
-	GlobalLog += Msg;
-	vglEnd();
-	psvDebugScreenInit();
-	psvDebugScreenPrintf("%s", GlobalLog.c_str());
-	sceKernelDelayThread(300 * 1000000);
-	sceKernelExitProcess(0);
+	sceKernelLoadStartModule("vs0:sys/external/libfios2.suprx", 0, NULL, 0, NULL, NULL);
+  	sceKernelLoadStartModule("vs0:sys/external/libc.suprx", 0, NULL, 0, NULL, NULL);
+
+  	sceKernelLoadStartModule("app0:libgpu_es4_ext.suprx", 0, NULL, 0, NULL, NULL);
+  	sceKernelLoadStartModule("app0:libIMGEGL.suprx", 0, NULL, 0, NULL, NULL);
+	sceKernelLoadStartModule("app0:libGLESv2.suprx", 0, NULL, 0, NULL, NULL);
+}
+
+//初始化PVR_PSP2
+void PVR_PSP2Init()
+{
+	PVRSRV_PSP2_APPHINT hint;
+  	PVRSRVInitializeAppHint(&hint);
+  	PVRSRVCreateVirtualAppHint(&hint);
+}
+
+//EGL初始化
+void EGLInit()
+{
+	EGLBoolean Res;
+	Display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+
+	Res = eglInitialize(Display, &MajorVersion, &MinorVersion);
+	if (Res == EGL_FALSE)
+	{
+		sceClibPrintf("EGL initialize failed.\n");
+		return;
+	}
+
+	eglChooseConfig(Display, ConfigAttr, &Config, 1, &NumConfigs);
+	Surface = eglCreateWindowSurface(Display, Config, (EGLNativeWindowType)0, NULL);
+	Context = eglCreateContext(Display, Config, EGL_NO_CONTEXT, NULL);
+	eglMakeCurrent(Display, Surface, Surface, Context);
+	eglSwapInterval(Display, (EGLint)1);
+
+}
+
+//EGL终止
+void EGLEnd()
+{
+	eglDestroySurface(Display, Surface);
+  	eglDestroyContext(Display, Context);
+  	eglTerminate(Display);
+}
+
+//自定义初始化
+void CustomInit()
+{
+	//防止载入图形时上下颠倒
+	stbi_set_flip_vertically_on_load(true);
+	
+	//开启深度缓冲区
+	glEnable(GL_DEPTH_TEST);
 }
 
 int main()
 {
-
-	stbi_set_flip_vertically_on_load(true);
-
-	//初始化图形
-	vglInit(0x800000);
-
-	//启用运行时编译Shader
-	vglEnableRuntimeShaderCompiler(GL_TRUE);
-
-	//开启深度缓冲区
-	glEnable(GL_DEPTH_TEST);
+	SCEInit();
+	PVR_PSP2Init();
+	EGLInit();
+	CustomInit();
 
 	//初始化着色器
-	DrawShader = new Shader(GetContentPath("Shader/VertexShader.cg"), GetContentPath("Shader/FragmentShader.cg"), GlobalLog);
+	DrawShader = new Shader(GetContentPath("Shader/VertexShader.glsl"), GetContentPath("Shader/FragmentShader.glsl"));
 	if (!DrawShader->bSuccessfulInit)
 	{
-		PrintMsg("Shader Compile Failed");
+		sceClibPrintf("Shader Compile Failed\n");
+		EGLEnd();
 		return 0;
 	}
 	DrawShader->Use();
@@ -122,14 +193,14 @@ int main()
 	glGenBuffers(1, &VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-	GlobalLog += "VBO generate success\n";
 
 	//读取纹理
 	int TextureWidth, TextureHeight, TextureChannel;
 	unsigned char *Data = stbi_load(GetContentPath("box.jpg").c_str(), &TextureWidth, &TextureHeight, &TextureChannel, 0);
 	if (!Data)
 	{
-		PrintMsg("Box texture read Failed");
+		sceClibPrintf("Box texture read Failed\n");
+		EGLEnd();
 		return 0;
 	}
 
@@ -147,13 +218,12 @@ int main()
 	//导入纹理
 	glUniform1i(glGetUniformLocation(DrawShader->GetID(), "BoxTexture"), 0);
 
-	GlobalLog += "Box texture generate success\n";
-
 	//读取纹理2
 	Data = stbi_load(GetContentPath("face.png").c_str(), &TextureWidth, &TextureHeight, &TextureChannel, 0);
 	if (!Data)
 	{
-		PrintMsg("Face texture read Failed");
+		sceClibPrintf("Face texture read Failed\n");
+		EGLEnd();
 		return 0;
 	}
 
@@ -171,13 +241,25 @@ int main()
 	//导入纹理2
 	glUniform1i(glGetUniformLocation(DrawShader->GetID(), "FaceTexture"), 1);
 
-	GlobalLog += "Face texture generate success\n";
+	//模型矩阵（内部坐标->世界坐标）
+	glm::mat4 ModelMat(1.0f);
+	ModelMat = glm::rotate(ModelMat, glm::radians(-55.0f), glm::vec3(1.0f, 0, 0));
+
+	//相机的反向矩阵（世界坐标->相机坐标）
+	glm::mat4 ViewMat(1.0f);
+	ViewMat = ViewMat = glm::translate(ViewMat, glm::vec3(0, 0, -3.0f));
+
+	//投影矩阵（相机坐标->投影坐标）
+	glm::mat4 ProjMat(1.0f);
+	ProjMat = glm::perspective(glm::radians(45.0f), (float)960 / (float)544, 0.1f, 100.0f);
+
+	//把变量Uniform到Shader
+	glUniformMatrix4fv(glGetUniformLocation(DrawShader->GetID(), "ModelMat"), 1, GL_FALSE, glm::value_ptr(ModelMat));
+	glUniformMatrix4fv(glGetUniformLocation(DrawShader->GetID(), "ViewMat"), 1, GL_FALSE, glm::value_ptr(ViewMat));
+	glUniformMatrix4fv(glGetUniformLocation(DrawShader->GetID(), "ProjMat"), 1, GL_FALSE, glm::value_ptr(ProjMat));
 
 	//创建相机
-	PlayerCamera = new Camera(glm::vec3(0, 0, 3.0f), glm::radians(5.0f),glm::radians(180.0f),0, glm::vec3(0, 1.0f, 0));
-	GlobalLog += "Camera created.\n";
-
-	GlobalLog += "\nPrepare to Draw.\n";
+	//PlayerCamera = new Camera(glm::vec3(0, 0, 3.0f), glm::radians(5.0f),glm::radians(0.0f),0, glm::vec3(0, 1.0f, 0));
 
 	while (true)
 	{
@@ -197,23 +279,6 @@ int main()
 		glEnableVertexAttribArray(0);
 		glEnableVertexAttribArray(1);
 
-		//模型矩阵（内部坐标->世界坐标）
-		glm::mat4 ModelMat(1.0f);
-		ModelMat = glm::rotate(ModelMat, glm::radians(-55.0f), glm::vec3(1.0f, 0, 0));
-
-		//相机的反向矩阵（世界坐标->相机坐标）
-		glm::mat4 ViewMat(1.0f);
-		ViewMat = PlayerCamera->GetViewMatrix();
-
-		//投影矩阵（相机坐标->投影坐标）
-		glm::mat4 ProjMat(1.0f);
-		ProjMat = glm::perspective(glm::radians(45.0f), (float)960 / (float)544, 0.1f, 100.0f);
-
-		//把变量Uniform到Shader
-		glUniformMatrix4fv(glGetUniformLocation(DrawShader->GetID(), "ModelMat"), 1, GL_FALSE, glm::value_ptr(ModelMat));
-		glUniformMatrix4fv(glGetUniformLocation(DrawShader->GetID(), "ViewMat"), 1, GL_FALSE, glm::value_ptr(ViewMat));
-		glUniformMatrix4fv(glGetUniformLocation(DrawShader->GetID(), "ProjMat"), 1, GL_FALSE, glm::value_ptr(ProjMat));
-
 		//绘制10个盒子
 		for (int i = 0; i < 10; i++)
 		{
@@ -227,10 +292,8 @@ int main()
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 			cnt++;
 		}
-
-		vglSwapBuffers(GL_FALSE);
 	}
 
-	vglEnd();
+	EGLEnd();
 	return 0;
 }
