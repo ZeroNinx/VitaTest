@@ -58,18 +58,15 @@ add_executable(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
 
   #Common
-  c
-  stdc++
+  m
 
   #SCE
   SceDisplay_stub
-  SceDebugForDriver_stub
 
   #PVR_PSP2
-  libIMGEGL_stub
-  libGLESv1_CM_stub
-  libGLESv2_stub
-  libgpu_es4_ext_stub
+  libIMGEGL_stub_weak
+  libgpu_es4_ext_stub_weak
+  libGLESv2_stub_weak
 )
 
 ## Create Vita files
@@ -87,9 +84,9 @@ vita_create_vpk(${PROJECT_NAME}.vpk ${VITA_TITLEID} ${PROJECT_NAME}.self
   FILE sce_sys/livearea/contents/template.xml sce_sys/livearea/contents/template.xml
 
   #suprx
-  FILE data/libGLESv2.suprx libGLESv2.suprx
-  FILE data/libgpu_es4_ext.suprx libgpu_es4_ext.suprx
-  FILE data/libIMGEGL.suprx libIMGEGL.suprx
+  FILE module/libGLESv2.suprx module/libGLESv2.suprx
+  FILE module/libgpu_es4_ext.suprx module/libgpu_es4_ext.suprx
+  FILE module/libIMGEGL.suprx module/libIMGEGL.suprx
 
   #Shader
   FILE data/Shader/VertexShader.glsl data/Shader/VertexShader.glsl

@@ -1,4 +1,5 @@
 #include "Shader.h"
+#include <psp2/kernel/clib.h>
 
 using namespace std;
 

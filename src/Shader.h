@@ -1,7 +1,6 @@
 #pragma once
 
 #include <PVR_PSP2/GLES2/gl2.h>
-#include <vitasdk.h>
 #include <string>
 #include <fstream>
 #include <sstream>

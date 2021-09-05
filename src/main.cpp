@@ -1,12 +1,13 @@
 #define __psp2__
 
-#include <psp2/kernel/processmgr.h>
-#include <PVR_PSP2/GLES2/gl2.h>
-#include <PVR_PSP2/EGL/eglplatform.h>
-#include <PVR_PSP2/EGL/egl.h>
-
 extern "C"
 {
+	#include <psp2/kernel/modulemgr.h>
+	#include <psp2/kernel/clib.h>
+
+	#include <PVR_PSP2/EGL/eglplatform.h>
+	#include <PVR_PSP2/EGL/egl.h>
+	#include <PVR_PSP2/GLES2/gl2.h>
 	#include <PVR_PSP2/gpu_es4/psp2_pvr_hint.h>
 }
 
@@ -27,7 +28,7 @@ using namespace std;
 
 //SCE
 int _newlib_heap_size_user   = 100 * 1024 * 1024;
-unsigned int sceLibcHeapSize = 50 * 1024 * 1024;
+unsigned int sceLibcHeapSize = 8 * 1024 * 1024;
 
 //EGL
 EGLDisplay Display;
@@ -113,12 +114,17 @@ glm::vec3 cubePositions[] = {
 //SCEInit
 void SCEInit()
 {
-	sceKernelLoadStartModule("vs0:sys/external/libfios2.suprx", 0, NULL, 0, NULL, NULL);
-  	sceKernelLoadStartModule("vs0:sys/external/libc.suprx", 0, NULL, 0, NULL, NULL);
+	SceUID Res = 0;
+	sceClibPrintf("suprx load start\n");
+	Res = sceKernelLoadStartModule("vs0:sys/external/libfios2.suprx", 0, NULL, 0, NULL, NULL);
+	sceClibPrintf("libfios2 Load res:%d\n", Res);
 
-  	sceKernelLoadStartModule("app0:libgpu_es4_ext.suprx", 0, NULL, 0, NULL, NULL);
-  	sceKernelLoadStartModule("app0:libIMGEGL.suprx", 0, NULL, 0, NULL, NULL);
-	sceKernelLoadStartModule("app0:libGLESv2.suprx", 0, NULL, 0, NULL, NULL);
+	Res = sceKernelLoadStartModule("vs0:sys/external/libc.suprx", 0, NULL, 0, NULL, NULL);
+	sceClibPrintf("libc Load res:%d\n", Res);
+
+	sceKernelLoadStartModule("app0:/module/libgpu_es4_ext.suprx", 0, NULL, 0, NULL, NULL);
+  	sceKernelLoadStartModule("app0:/module/libIMGEGL.suprx", 0, NULL, 0, NULL, NULL);
+	sceKernelLoadStartModule("app0:/module/libGLESv2.suprx", 0, NULL, 0, NULL, NULL);
 }
 
 //初始化PVR_PSP2
@@ -142,7 +148,13 @@ void EGLInit()
 		return;
 	}
 
-	eglChooseConfig(Display, ConfigAttr, &Config, 1, &NumConfigs);
+	Res = eglChooseConfig(Display, ConfigAttr, &Config, 1, &NumConfigs);
+	if (Res == EGL_FALSE)
+	{
+		sceClibPrintf("EGL config initialize failed.\n");
+		return;
+	}
+
 	Surface = eglCreateWindowSurface(Display, Config, (EGLNativeWindowType)0, NULL);
 	Context = eglCreateContext(Display, Config, EGL_NO_CONTEXT, NULL);
 	eglMakeCurrent(Display, Surface, Surface, Context);
