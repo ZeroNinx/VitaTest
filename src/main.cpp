@@ -1,5 +1,3 @@
-#define __psp2__
-
 extern "C"
 {
 	#include <psp2/kernel/modulemgr.h>
@@ -28,7 +26,7 @@ using namespace std;
 
 //SCE
 int _newlib_heap_size_user   = 100 * 1024 * 1024;
-unsigned int sceLibcHeapSize = 8 * 1024 * 1024;
+unsigned int sceLibcHeapSize = 64 * 1024 * 1024;
 
 //EGL
 EGLDisplay Display;
@@ -114,17 +112,10 @@ glm::vec3 cubePositions[] = {
 //SCEInit
 void SCEInit()
 {
-	SceUID Res = 0;
-	sceClibPrintf("suprx load start\n");
-	Res = sceKernelLoadStartModule("vs0:sys/external/libfios2.suprx", 0, NULL, 0, NULL, NULL);
-	sceClibPrintf("libfios2 Load res:%d\n", Res);
-
-	Res = sceKernelLoadStartModule("vs0:sys/external/libc.suprx", 0, NULL, 0, NULL, NULL);
-	sceClibPrintf("libc Load res:%d\n", Res);
-
-	sceKernelLoadStartModule("app0:/module/libgpu_es4_ext.suprx", 0, NULL, 0, NULL, NULL);
-  	sceKernelLoadStartModule("app0:/module/libIMGEGL.suprx", 0, NULL, 0, NULL, NULL);
-	sceKernelLoadStartModule("app0:/module/libGLESv2.suprx", 0, NULL, 0, NULL, NULL);
+	sceKernelLoadStartModule("vs0:sys/external/libfios2.suprx", 0, NULL, 0, NULL, NULL);
+	sceKernelLoadStartModule("vs0:sys/external/libc.suprx", 0, NULL, 0, NULL, NULL);
+	sceKernelLoadStartModule("app0:module/libgpu_es4_ext.suprx", 0, NULL, 0, NULL, NULL);
+  	sceKernelLoadStartModule("app0:module/libIMGEGL.suprx", 0, NULL, 0, NULL, NULL);
 }
 
 //初始化PVR_PSP2
@@ -144,14 +135,14 @@ void EGLInit()
 	Res = eglInitialize(Display, &MajorVersion, &MinorVersion);
 	if (Res == EGL_FALSE)
 	{
-		sceClibPrintf("EGL initialize failed.\n");
+		See("EGL initialize failed. ");
 		return;
 	}
 
 	Res = eglChooseConfig(Display, ConfigAttr, &Config, 1, &NumConfigs);
 	if (Res == EGL_FALSE)
 	{
-		sceClibPrintf("EGL config initialize failed.\n");
+		See("EGL config initialize failed. ");
 		return;
 	}
 
@@ -259,7 +250,7 @@ int main()
 
 	//相机的反向矩阵（世界坐标->相机坐标）
 	glm::mat4 ViewMat(1.0f);
-	ViewMat = ViewMat = glm::translate(ViewMat, glm::vec3(0, 0, -3.0f));
+	ViewMat = glm::translate(ViewMat, glm::vec3(0, 0, -3.0f));
 
 	//投影矩阵（相机坐标->投影坐标）
 	glm::mat4 ProjMat(1.0f);
