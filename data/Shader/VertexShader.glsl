@@ -1,11 +1,13 @@
-layout (location = 6) in vec3 aPos; 
-layout (location = 7) in vec2 aTexCoord;
+#version 100
+
+attribute vec3 aPos; 
+attribute vec2 aTexCoord;
 
 uniform mat4 ModelMat;
 uniform mat4 ViewMat;
 uniform mat4 ProjMat;
 
-out vec2 TexCoord;
+varying vec2 TexCoord;
 
 void main()
 {

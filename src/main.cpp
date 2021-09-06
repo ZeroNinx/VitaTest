@@ -25,8 +25,8 @@ extern "C"
 using namespace std;
 
 //SCE
-int _newlib_heap_size_user   = 100 * 1024 * 1024;
-unsigned int sceLibcHeapSize = 64 * 1024 * 1024;
+int _newlib_heap_size_user   = 16 * 1024 * 1024;
+unsigned int sceLibcHeapSize = 8 * 1024 * 1024;
 
 //EGL
 EGLDisplay Display;
@@ -42,6 +42,11 @@ EGLint ConfigAttr[] =
 	EGL_GREEN_SIZE, 8,
 	EGL_BLUE_SIZE, 8,
 	EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+	EGL_NONE
+};
+EGLint ContextAttributeList[] = 
+{
+	EGL_CONTEXT_CLIENT_VERSION, 2,
 	EGL_NONE
 };
 
@@ -109,13 +114,14 @@ glm::vec3 cubePositions[] = {
 	glm::vec3(1.5f, 0.2f, -1.5f),
 	glm::vec3(-1.3f, 1.0f, -1.5f)};
 
-//SCEInit
-void SCEInit()
+//Module初始化
+void ModuleInit()
 {
 	sceKernelLoadStartModule("vs0:sys/external/libfios2.suprx", 0, NULL, 0, NULL, NULL);
 	sceKernelLoadStartModule("vs0:sys/external/libc.suprx", 0, NULL, 0, NULL, NULL);
 	sceKernelLoadStartModule("app0:module/libgpu_es4_ext.suprx", 0, NULL, 0, NULL, NULL);
   	sceKernelLoadStartModule("app0:module/libIMGEGL.suprx", 0, NULL, 0, NULL, NULL);
+	See("Module init OK");
 }
 
 //初始化PVR_PSP2
@@ -124,6 +130,7 @@ void PVR_PSP2Init()
 	PVRSRV_PSP2_APPHINT hint;
   	PVRSRVInitializeAppHint(&hint);
   	PVRSRVCreateVirtualAppHint(&hint);
+	See("PVE_PSP2 init OK.");
 }
 
 //EGL初始化
@@ -131,6 +138,11 @@ void EGLInit()
 {
 	EGLBoolean Res;
 	Display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+	if(!Display)
+	{
+		See("EGL display get failed.");
+		return;
+	}
 
 	Res = eglInitialize(Display, &MajorVersion, &MinorVersion);
 	if (Res == EGL_FALSE)
@@ -146,11 +158,23 @@ void EGLInit()
 		return;
 	}
 
-	Surface = eglCreateWindowSurface(Display, Config, (EGLNativeWindowType)0, NULL);
-	Context = eglCreateContext(Display, Config, EGL_NO_CONTEXT, NULL);
-	eglMakeCurrent(Display, Surface, Surface, Context);
-	eglSwapInterval(Display, (EGLint)1);
+	Surface = eglCreateWindowSurface(Display, Config, (EGLNativeWindowType)0, nullptr);
+	if(!Surface)
+	{
+		See("EGL surface create failed.");
+		return;
+	}
 
+	Context = eglCreateContext(Display, Config, EGL_NO_CONTEXT, ContextAttributeList);
+	if(!Context)
+	{
+		See("EGL content create failed.");
+		return;
+	}
+
+	eglMakeCurrent(Display, Surface, Surface, Context);
+
+	See("EGL init OK.");
 }
 
 //EGL终止
@@ -159,6 +183,7 @@ void EGLEnd()
 	eglDestroySurface(Display, Surface);
   	eglDestroyContext(Display, Context);
   	eglTerminate(Display);
+	See("EGL terminated.");
 }
 
 //自定义初始化
@@ -169,14 +194,18 @@ void CustomInit()
 	
 	//开启深度缓冲区
 	glEnable(GL_DEPTH_TEST);
+
+	See("Custom init OK");
 }
 
 int main()
 {
-	SCEInit();
+	//全局初始化
+	ModuleInit();
 	PVR_PSP2Init();
 	EGLInit();
 	CustomInit();
+	See("All init OK.");
 
 	//初始化着色器
 	DrawShader = new Shader(GetContentPath("Shader/VertexShader.glsl"), GetContentPath("Shader/FragmentShader.glsl"));
@@ -187,6 +216,7 @@ int main()
 		return 0;
 	}
 	DrawShader->Use();
+	See("Shader program init OK.");
 
 	//绑定Location对应的变量
 	glBindAttribLocation(DrawShader->GetID(), 0, "aPos");
@@ -199,13 +229,14 @@ int main()
 
 	//读取纹理
 	int TextureWidth, TextureHeight, TextureChannel;
-	unsigned char *Data = stbi_load(GetContentPath("box.jpg").c_str(), &TextureWidth, &TextureHeight, &TextureChannel, 0);
+	unsigned char *Data = stbi_load(GetContentPath("Resource/box.jpg").c_str(), &TextureWidth, &TextureHeight, &TextureChannel, 0);
 	if (!Data)
 	{
 		sceClibPrintf("Box texture read Failed\n");
 		EGLEnd();
 		return 0;
 	}
+	See("Box texture loaded.");
 
 	//创建纹理
 	glGenTextures(1, &Texture);
@@ -222,13 +253,14 @@ int main()
 	glUniform1i(glGetUniformLocation(DrawShader->GetID(), "BoxTexture"), 0);
 
 	//读取纹理2
-	Data = stbi_load(GetContentPath("face.png").c_str(), &TextureWidth, &TextureHeight, &TextureChannel, 0);
+	Data = stbi_load(GetContentPath("Resource/face.png").c_str(), &TextureWidth, &TextureHeight, &TextureChannel, 0);
 	if (!Data)
 	{
 		sceClibPrintf("Face texture read Failed\n");
 		EGLEnd();
 		return 0;
 	}
+	See("Face texture loaded.");
 
 	//创建纹理2
 	glGenTextures(1, &Texture2);
@@ -244,25 +276,9 @@ int main()
 	//导入纹理2
 	glUniform1i(glGetUniformLocation(DrawShader->GetID(), "FaceTexture"), 1);
 
-	//模型矩阵（内部坐标->世界坐标）
-	glm::mat4 ModelMat(1.0f);
-	ModelMat = glm::rotate(ModelMat, glm::radians(-55.0f), glm::vec3(1.0f, 0, 0));
-
-	//相机的反向矩阵（世界坐标->相机坐标）
-	glm::mat4 ViewMat(1.0f);
-	ViewMat = glm::translate(ViewMat, glm::vec3(0, 0, -3.0f));
-
-	//投影矩阵（相机坐标->投影坐标）
-	glm::mat4 ProjMat(1.0f);
-	ProjMat = glm::perspective(glm::radians(45.0f), (float)960 / (float)544, 0.1f, 100.0f);
-
-	//把变量Uniform到Shader
-	glUniformMatrix4fv(glGetUniformLocation(DrawShader->GetID(), "ModelMat"), 1, GL_FALSE, glm::value_ptr(ModelMat));
-	glUniformMatrix4fv(glGetUniformLocation(DrawShader->GetID(), "ViewMat"), 1, GL_FALSE, glm::value_ptr(ViewMat));
-	glUniformMatrix4fv(glGetUniformLocation(DrawShader->GetID(), "ProjMat"), 1, GL_FALSE, glm::value_ptr(ProjMat));
-
 	//创建相机
-	//PlayerCamera = new Camera(glm::vec3(0, 0, 3.0f), glm::radians(5.0f),glm::radians(0.0f),0, glm::vec3(0, 1.0f, 0));
+	PlayerCamera = new Camera(glm::vec3(0, 0, 3.0f), glm::radians(5.0f),glm::radians(180.0f),0, glm::vec3(0, 1.0f, 0));
+	See("Camera created.");
 
 	while (true)
 	{
@@ -282,6 +298,23 @@ int main()
 		glEnableVertexAttribArray(0);
 		glEnableVertexAttribArray(1);
 
+		//模型矩阵（内部坐标->世界坐标）
+		glm::mat4 ModelMat(1.0f);
+		ModelMat = glm::rotate(ModelMat, glm::radians(-55.0f), glm::vec3(1.0f, 0, 0));
+
+		//相机的反向矩阵（世界坐标->相机坐标）
+		glm::mat4 ViewMat(1.0f);
+		ViewMat = PlayerCamera->GetViewMatrix();
+
+		//投影矩阵（相机坐标->投影坐标）
+		glm::mat4 ProjMat(1.0f);
+		ProjMat = glm::perspective(glm::radians(45.0f), (float)960 / (float)544, 0.1f, 100.0f);
+
+		//把变量Uniform到Shader
+		glUniformMatrix4fv(glGetUniformLocation(DrawShader->GetID(), "ModelMat"), 1, GL_FALSE, glm::value_ptr(ModelMat));
+		glUniformMatrix4fv(glGetUniformLocation(DrawShader->GetID(), "ViewMat"), 1, GL_FALSE, glm::value_ptr(ViewMat));
+		glUniformMatrix4fv(glGetUniformLocation(DrawShader->GetID(), "ProjMat"), 1, GL_FALSE, glm::value_ptr(ProjMat));
+
 		//绘制10个盒子
 		for (int i = 0; i < 10; i++)
 		{
@@ -295,6 +328,9 @@ int main()
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 			cnt++;
 		}
+
+		eglSwapBuffers(Display,Surface);
+
 	}
 
 	EGLEnd();

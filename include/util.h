@@ -1,4 +1,5 @@
 #pragma once
+#include <psp2/kernel/clib.h>
 #include <string>
 
 using namespace std;
@@ -15,11 +16,14 @@ inline string GetContentPath(const char* InPath)
 //快速输出日志
 inline void See(const string &InStr)
 {
-    sceClibPrintf((InStr + "\n").c_str());
+    sceClibPrintf("[-----ZERO00000-----]");
+    sceClibPrintf(InStr.c_str());
+    sceClibPrintf("\n");
 }
 
 inline void See(const char *InStr)
 {
+    sceClibPrintf("[-----ZERO00000-----]");
     sceClibPrintf(InStr);
     sceClibPrintf("\n");
 }

@@ -1,5 +1,5 @@
 #include "Shader.h"
-#include <psp2/kernel/clib.h>
+#include "util.h"
 
 using namespace std;
 
@@ -24,7 +24,7 @@ Shader::Shader(std::string&& VertexPath, string&& FragmentPath)
 	FS.open(VertexPath, ios::in);
 	if (!FS.is_open())
 	{
-		sceClibPrintf("Vertex shader file open failed.\n");
+		See("Vertex shader file open failed.");
 		return;
 	}
 	SS << FS.rdbuf();
@@ -38,7 +38,7 @@ Shader::Shader(std::string&& VertexPath, string&& FragmentPath)
 	FS.open(FragmentPath, ios::in);
 	if (!FS.is_open())
 	{
-		sceClibPrintf("Fragment shader file open failed.\n");
+		See("Fragment shader file open failed.");
 		return;
 	}
 	SS << FS.rdbuf();
@@ -48,7 +48,11 @@ Shader::Shader(std::string&& VertexPath, string&& FragmentPath)
 
 	// 顶点着色器
 	VertexShader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(VertexShader, 1, &VertexShaderCode, NULL);
+	if(!VertexShader)
+	{
+		See("Vertex shader create failed.");
+	}
+	glShaderSource(VertexShader, 1, &VertexShaderCode, nullptr);
 	glCompileShader(VertexShader);
 
 	// 打印编译错误（如果有的话）
@@ -56,13 +60,19 @@ Shader::Shader(std::string&& VertexPath, string&& FragmentPath)
 	if (Result == GL_FALSE)
 	{
 		glGetShaderInfoLog(VertexShader, 512, NULL, ErrMsg);
-		sceClibPrintf("%s\n",ErrMsg);
+		See(ErrMsg);
 		return;
 	}
+	See("Vertext shader compile OK.");
+
 
 	// 片段着色器
 	FragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(FragmentShader, 1, &FragmentShaderCode, NULL);
+	if(!FragmentShader)
+	{
+		See("Fragment shader create failed.");
+	}
+	glShaderSource(FragmentShader, 1, &FragmentShaderCode, nullptr);
 	glCompileShader(FragmentShader);
 
 	// 打印编译错误（如果有的话）
@@ -70,9 +80,10 @@ Shader::Shader(std::string&& VertexPath, string&& FragmentPath)
 	if (Result == GL_FALSE)
 	{
 		glGetShaderInfoLog(FragmentShader, 512, NULL, ErrMsg);
-		sceClibPrintf("%s\n",ErrMsg);
+		See(ErrMsg);
 		return;
 	}
+	See("Fragment shader compile OK.");
 
 	// 着色器程序
 	ID = glCreateProgram();
@@ -85,7 +96,7 @@ Shader::Shader(std::string&& VertexPath, string&& FragmentPath)
 	if (Result == GL_FALSE)
 	{
 		glGetShaderInfoLog(VertexShader, 512, NULL, ErrMsg);
-		sceClibPrintf("%s\n",ErrMsg);
+		See(ErrMsg);
 		return;
 	}
 

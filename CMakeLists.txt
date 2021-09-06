@@ -85,6 +85,7 @@ vita_create_vpk(${PROJECT_NAME}.vpk ${VITA_TITLEID} ${PROJECT_NAME}.self
   FILE module/libGLESv2.suprx module/libGLESv2.suprx
   FILE module/libgpu_es4_ext.suprx module/libgpu_es4_ext.suprx
   FILE module/libIMGEGL.suprx module/libIMGEGL.suprx
+  FILE module/libpvrPSP2_WSEGL.suprx module/libpvrPSP2_WSEGL.suprx
 
   #Shader
   FILE data/Shader/VertexShader.glsl data/Shader/VertexShader.glsl
