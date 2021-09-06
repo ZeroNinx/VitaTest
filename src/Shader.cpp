@@ -101,7 +101,12 @@ Shader::Shader(std::string&& VertexPath, string&& FragmentPath)
 	}
 
 	//标记创建成功
-	bSuccessfulInit = true;
+	bIsValid = true;
+}
+
+bool Shader::IsValid()
+{
+	return bIsValid;
 }
 
 void Shader::Use()

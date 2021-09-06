@@ -19,6 +19,7 @@ extern "C"
 #include "stb_image.h"
 #include "Shader.h"
 #include "Camera.h"
+#include "Texture2D.h"
 
 #include "util.h"
 
@@ -50,15 +51,11 @@ EGLint ContextAttributeList[] =
 	EGL_NONE
 };
 
-Shader* DrawShader;
-Camera* PlayerCamera;
 unsigned int VBO, VAO, EBO;
-unsigned Texture, Texture2;
 int cnt = 0;
 
 //盒子的36个顶点
-float vertices[] =
-	{
+float vertices[] ={
 		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
 		0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
 		0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
@@ -208,76 +205,50 @@ int main()
 	See("All init OK.");
 
 	//初始化着色器
-	DrawShader = new Shader(GetContentPath("Shader/VertexShader.glsl"), GetContentPath("Shader/FragmentShader.glsl"));
-	if (!DrawShader->bSuccessfulInit)
+	Shader DrawShader = Shader(GetContentPath("Shader/VertexShader.glsl"), GetContentPath("Shader/FragmentShader.glsl"));
+	if (!DrawShader.IsValid())
 	{
-		sceClibPrintf("Shader Compile Failed\n");
+		See("Shader init failed");
 		EGLEnd();
 		return 0;
 	}
-	DrawShader->Use();
+	DrawShader.Use();
 	See("Shader program init OK.");
 
 	//绑定Location对应的变量
-	glBindAttribLocation(DrawShader->GetID(), 0, "aPos");
-	glBindAttribLocation(DrawShader->GetID(), 1, "aTexCoord");
+	glBindAttribLocation(DrawShader.GetID(), 0, "aPos");
+	glBindAttribLocation(DrawShader.GetID(), 1, "aTexCoord");
 
 	//创建VBO
 	glGenBuffers(1, &VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-	//读取纹理
-	int TextureWidth, TextureHeight, TextureChannel;
-	unsigned char *Data = stbi_load(GetContentPath("Resource/box.jpg").c_str(), &TextureWidth, &TextureHeight, &TextureChannel, 0);
-	if (!Data)
+	//创建纹理
+	Texture2D BoxTexture = Texture2D(GetContentPath("Resource/box.jpg"));
+	if (!BoxTexture.IsValid())
 	{
-		sceClibPrintf("Box texture read Failed\n");
+		See("Box texture read Failed");
 		EGLEnd();
 		return 0;
 	}
 	See("Box texture loaded.");
 
-	//创建纹理
-	glGenTextures(1, &Texture);
-	glBindTexture(GL_TEXTURE_2D, Texture);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // set texture wrapping to GL_REPEAT (default wrapping method)
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, TextureWidth, TextureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, Data);
-	glGenerateMipmap(Texture);
-	stbi_image_free(Data);
-
-	//导入纹理
-	glUniform1i(glGetUniformLocation(DrawShader->GetID(), "BoxTexture"), 0);
-
-	//读取纹理2
-	Data = stbi_load(GetContentPath("Resource/face.png").c_str(), &TextureWidth, &TextureHeight, &TextureChannel, 0);
-	if (!Data)
+	Texture2D FaceTexture = Texture2D(GetContentPath("Resource/face.png"));
+	if (!FaceTexture.IsValid())
 	{
-		sceClibPrintf("Face texture read Failed\n");
+		See("Face texture read Failed");
 		EGLEnd();
 		return 0;
 	}
 	See("Face texture loaded.");
 
-	//创建纹理2
-	glGenTextures(1, &Texture2);
-	glBindTexture(GL_TEXTURE_2D, Texture2);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // set texture wrapping to GL_REPEAT (default wrapping method)
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, TextureWidth, TextureHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, Data);
-	glGenerateMipmap(Texture2);
-	stbi_image_free(Data);
-
-	//导入纹理2
-	glUniform1i(glGetUniformLocation(DrawShader->GetID(), "FaceTexture"), 1);
+	//导入纹理
+	glUniform1i(glGetUniformLocation(DrawShader.GetID(), "BoxTexture"), 0);
+	glUniform1i(glGetUniformLocation(DrawShader.GetID(), "FaceTexture"), 1);
 
 	//创建相机
-	PlayerCamera = new Camera(glm::vec3(0, 0, 3.0f), glm::radians(5.0f),glm::radians(180.0f),0, glm::vec3(0, 1.0f, 0));
+	Camera PlayerCamera = Camera(glm::vec3(0, 0, 3.0f), glm::radians(5.0f),glm::radians(180.0f),0, glm::vec3(0, 1.0f, 0));
 	See("Camera created.");
 
 	while (true)
@@ -294,16 +265,16 @@ int main()
 
 		//相机的反向矩阵（世界坐标->相机坐标）
 		glm::mat4 ViewMat(1.0f);
-		ViewMat = PlayerCamera->GetViewMatrix();
+		ViewMat = PlayerCamera.GetViewMatrix();
 
 		//投影矩阵（相机坐标->投影坐标）
 		glm::mat4 ProjMat(1.0f);
 		ProjMat = glm::perspective(glm::radians(45.0f), (float)960 / (float)544, 0.1f, 100.0f);
 
 		//把变量Uniform到Shader
-		glUniformMatrix4fv(glGetUniformLocation(DrawShader->GetID(), "ModelMat"), 1, GL_FALSE, glm::value_ptr(ModelMat));
-		glUniformMatrix4fv(glGetUniformLocation(DrawShader->GetID(), "ViewMat"), 1, GL_FALSE, glm::value_ptr(ViewMat));
-		glUniformMatrix4fv(glGetUniformLocation(DrawShader->GetID(), "ProjMat"), 1, GL_FALSE, glm::value_ptr(ProjMat));
+		glUniformMatrix4fv(glGetUniformLocation(DrawShader.GetID(), "ModelMat"), 1, GL_FALSE, glm::value_ptr(ModelMat));
+		glUniformMatrix4fv(glGetUniformLocation(DrawShader.GetID(), "ViewMat"), 1, GL_FALSE, glm::value_ptr(ViewMat));
+		glUniformMatrix4fv(glGetUniformLocation(DrawShader.GetID(), "ProjMat"), 1, GL_FALSE, glm::value_ptr(ProjMat));
 
 		//清除缓冲区
 		glClearColor(0.5, 1.0, 1.0, 1.0);
@@ -311,9 +282,9 @@ int main()
 
 		//绑定材质
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, Texture);
+		glBindTexture(GL_TEXTURE_2D, BoxTexture.GetID());
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, Texture2);
+		glBindTexture(GL_TEXTURE_2D, FaceTexture.GetID());
 
 		//绘制10个盒子
 		for (int i = 0; i < 10; i++)
@@ -324,7 +295,7 @@ int main()
 			ModelMat = glm::translate(ModelMat, cubePositions[i]);
 			ModelMat = glm::rotate(ModelMat, glm::radians(Angle), glm::vec3(1.0f, 0.3f, 0.5f));
 
-			glUniformMatrix4fv(glGetUniformLocation(DrawShader->GetID(), "ModelMat"), 1, GL_FALSE, glm::value_ptr(ModelMat));
+			glUniformMatrix4fv(glGetUniformLocation(DrawShader.GetID(), "ModelMat"), 1, GL_FALSE, glm::value_ptr(ModelMat));
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 			cnt++;
 		}

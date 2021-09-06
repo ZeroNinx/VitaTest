@@ -13,6 +13,9 @@ public:
 	// 构造器读取并构建着色器
 	Shader(std::string&& VertexPath, std::string&& FragmentPath);
 
+	//返回是否有效
+	bool IsValid();
+
 	// 使用/激活程序
 	void Use();
 
@@ -36,16 +39,13 @@ public:
 		glUniform1f(glGetUniformLocation(ID, name.c_str()), value);
 	}
 
-public:
+private:
 
 	// 程序ID
 	unsigned int ID;
 
 	// 是否初始化成功
-	bool bSuccessfulInit = false;
-
-	// 是否编译成功
-	bool bSuccessfulCompile = false;
+	bool bIsValid = false;
 
 	// 顶点着色器
 	std::string VertexShaderCode;
