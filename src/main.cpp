@@ -282,16 +282,6 @@ int main()
 
 	while (true)
 	{
-		//清除缓冲区
-		glClearColor(0.5, 1.0, 1.0, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		//绑定材质
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, Texture);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, Texture2);
-
 		//绑定顶点到Location
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
@@ -315,16 +305,26 @@ int main()
 		glUniformMatrix4fv(glGetUniformLocation(DrawShader->GetID(), "ViewMat"), 1, GL_FALSE, glm::value_ptr(ViewMat));
 		glUniformMatrix4fv(glGetUniformLocation(DrawShader->GetID(), "ProjMat"), 1, GL_FALSE, glm::value_ptr(ProjMat));
 
+		//清除缓冲区
+		glClearColor(0.5, 1.0, 1.0, 1.0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		//绑定材质
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, Texture);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, Texture2);
+
 		//绘制10个盒子
 		for (int i = 0; i < 10; i++)
 		{
-			float Angle = fmod(20.0f * i + 0.01 * cnt, 360.0f);
+			float Angle = fmod(20.0f * i + 0.02 * cnt, 360.0f);
 
 			ModelMat = glm::mat4(1.0f);
 			ModelMat = glm::translate(ModelMat, cubePositions[i]);
 			ModelMat = glm::rotate(ModelMat, glm::radians(Angle), glm::vec3(1.0f, 0.3f, 0.5f));
 
-			glUniformMatrix4fv(glGetUniformLocation(DrawShader->GetID(), "ModelMat"), 1, GL_TRUE, glm::value_ptr(ModelMat));
+			glUniformMatrix4fv(glGetUniformLocation(DrawShader->GetID(), "ModelMat"), 1, GL_FALSE, glm::value_ptr(ModelMat));
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 			cnt++;
 		}
