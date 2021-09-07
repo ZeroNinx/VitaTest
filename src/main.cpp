@@ -1,7 +1,7 @@
 extern "C"
 {
 	#include <psp2/kernel/modulemgr.h>
-	#include <psp2/kernel/clib.h>
+	#include <psp2/kernel/processmgr.h>
 
 	#include <PVR_PSP2/EGL/eglplatform.h>
 	#include <PVR_PSP2/EGL/egl.h>
@@ -9,19 +9,12 @@ extern "C"
 	#include <PVR_PSP2/gpu_es4/psp2_pvr_hint.h>
 }
 
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include "Program/LearnOpengl.h"
+#include "util.h"
 
+#include <cmath>
 #include <fstream>
 #include <string>
-
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-#include "Shader.h"
-#include "Camera.h"
-#include "Texture2D.h"
-
-#include "util.h"
 
 using namespace std;
 
@@ -51,65 +44,12 @@ EGLint ContextAttributeList[] =
 	EGL_NONE
 };
 
-unsigned int VBO, VAO, EBO;
-int cnt = 0;
-
-//盒子的36个顶点
-float vertices[] ={
-		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-		0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
-		0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-		0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-		-0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-
-		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-		0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-		0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
-		0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
-		-0.5f, 0.5f, 0.5f, 0.0f, 1.0f,
-		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-
-		-0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-		-0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-		-0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-
-		0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-		0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-		0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-		0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-		0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-		0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-
-		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-		0.5f, -0.5f, -0.5f, 1.0f, 1.0f,
-		0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-		0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-
-		-0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
-		0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-		0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-		0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-		-0.5f, 0.5f, 0.5f, 0.0f, 0.0f,
-		-0.5f, 0.5f, -0.5f, 0.0f, 1.0f};
-
-//每个盒子的位移
-glm::vec3 cubePositions[] = {
-	glm::vec3(0.0f, 0.0f, 0.0f),
-	glm::vec3(2.0f, 5.0f, -15.0f),
-	glm::vec3(-1.5f, -2.2f, -2.5f),
-	glm::vec3(-3.8f, -2.0f, -12.3f),
-	glm::vec3(2.4f, -0.4f, -3.5f),
-	glm::vec3(-1.7f, 3.0f, -7.5f),
-	glm::vec3(1.3f, -2.0f, -2.5f),
-	glm::vec3(1.5f, 2.0f, -2.5f),
-	glm::vec3(1.5f, 0.2f, -1.5f),
-	glm::vec3(-1.3f, 1.0f, -1.5f)};
+//SCE初始化
+void SCEInit()
+{
+	sceCtrlSetSamplingMode(SCE_CTRL_MODE_ANALOG);
+	See("SCE init OK");
+}
 
 //Module初始化
 void ModuleInit()
@@ -183,127 +123,38 @@ void EGLEnd()
 	See("EGL terminated.");
 }
 
-//自定义初始化
-void CustomInit()
-{
-	//防止载入图形时上下颠倒
-	stbi_set_flip_vertically_on_load(true);
-	
-	//开启深度缓冲区
-	glEnable(GL_DEPTH_TEST);
-
-	See("Custom init OK");
-}
-
 int main()
 {
 	//全局初始化
 	ModuleInit();
 	PVR_PSP2Init();
 	EGLInit();
-	CustomInit();
+	SCEInit();
 	See("All init OK.");
 
-	//初始化着色器
-	Shader DrawShader = Shader(GetContentPath("Shader/VertexShader.glsl"), GetContentPath("Shader/FragmentShader.glsl"));
-	if (!DrawShader.IsValid())
+	//程序创建
+	Program* MainProgram = new LearnOpengl();
+	if( !MainProgram->Init())
 	{
-		See("Shader init failed");
 		EGLEnd();
-		return 0;
+		return -1;
 	}
-	DrawShader.Use();
-	See("Shader program init OK.");
+	See("LearnOpengl init OK.");
 
-	//绑定Location对应的变量
-	glBindAttribLocation(DrawShader.GetID(), 0, "aPos");
-	glBindAttribLocation(DrawShader.GetID(), 1, "aTexCoord");
-
-	//创建VBO
-	glGenBuffers(1, &VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	//创建纹理
-	Texture2D BoxTexture = Texture2D(GetContentPath("Resource/box.jpg"));
-	if (!BoxTexture.IsValid())
+	//主循环
+	while (!MainProgram->ShouldEnd)
 	{
-		See("Box texture read Failed");
-		EGLEnd();
-		return 0;
-	}
-	See("Box texture loaded.");
+		//输入处理
+		MainProgram->ProcessInput();
 
-	Texture2D FaceTexture = Texture2D(GetContentPath("Resource/face.png"));
-	if (!FaceTexture.IsValid())
-	{
-		See("Face texture read Failed");
-		EGLEnd();
-		return 0;
-	}
-	See("Face texture loaded.");
-
-	//导入纹理
-	glUniform1i(glGetUniformLocation(DrawShader.GetID(), "BoxTexture"), 0);
-	glUniform1i(glGetUniformLocation(DrawShader.GetID(), "FaceTexture"), 1);
-
-	//创建相机
-	Camera PlayerCamera = Camera(glm::vec3(0, 0, 3.0f), glm::radians(5.0f),glm::radians(180.0f),0, glm::vec3(0, 1.0f, 0));
-	See("Camera created.");
-
-	while (true)
-	{
-		//绑定顶点到Location
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
-		glEnableVertexAttribArray(0);
-		glEnableVertexAttribArray(1);
-
-		//模型矩阵（内部坐标->世界坐标）
-		glm::mat4 ModelMat(1.0f);
-		ModelMat = glm::rotate(ModelMat, glm::radians(-55.0f), glm::vec3(1.0f, 0, 0));
-
-		//相机的反向矩阵（世界坐标->相机坐标）
-		glm::mat4 ViewMat(1.0f);
-		ViewMat = PlayerCamera.GetViewMatrix();
-
-		//投影矩阵（相机坐标->投影坐标）
-		glm::mat4 ProjMat(1.0f);
-		ProjMat = glm::perspective(glm::radians(45.0f), (float)960 / (float)544, 0.1f, 100.0f);
-
-		//把变量Uniform到Shader
-		glUniformMatrix4fv(glGetUniformLocation(DrawShader.GetID(), "ModelMat"), 1, GL_FALSE, glm::value_ptr(ModelMat));
-		glUniformMatrix4fv(glGetUniformLocation(DrawShader.GetID(), "ViewMat"), 1, GL_FALSE, glm::value_ptr(ViewMat));
-		glUniformMatrix4fv(glGetUniformLocation(DrawShader.GetID(), "ProjMat"), 1, GL_FALSE, glm::value_ptr(ProjMat));
-
-		//清除缓冲区
-		glClearColor(0.5, 1.0, 1.0, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		//绑定材质
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, BoxTexture.GetID());
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, FaceTexture.GetID());
-
-		//绘制10个盒子
-		for (int i = 0; i < 10; i++)
-		{
-			float Angle = fmod(20.0f * i + 0.02 * cnt, 360.0f);
-
-			ModelMat = glm::mat4(1.0f);
-			ModelMat = glm::translate(ModelMat, cubePositions[i]);
-			ModelMat = glm::rotate(ModelMat, glm::radians(Angle), glm::vec3(1.0f, 0.3f, 0.5f));
-
-			glUniformMatrix4fv(glGetUniformLocation(DrawShader.GetID(), "ModelMat"), 1, GL_FALSE, glm::value_ptr(ModelMat));
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-			cnt++;
-		}
-
+		//绘画
+		MainProgram->Draw();
+		
+		//显示
 		eglSwapBuffers(Display,Surface);
-
 	}
 
 	EGLEnd();
+	sceKernelExitProcess(0);
 	return 0;
 }

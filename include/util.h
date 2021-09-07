@@ -1,6 +1,14 @@
 #pragma once
-#include <psp2/kernel/clib.h>
+extern "C"
+{
+    #include <psp2/kernel/clib.h>
+}
+
 #include <string>
+
+//Attribute对应的Location
+#define AL_Position 0
+#define AL_TexCoord 1
 
 using namespace std;
 

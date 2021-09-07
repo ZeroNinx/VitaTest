@@ -10,7 +10,7 @@ class Shader
 {
 public:
 	
-	// 构造器读取并构建着色器
+	Shader();
 	Shader(std::string&& VertexPath, std::string&& FragmentPath);
 
 	//返回是否有效
@@ -25,18 +25,20 @@ public:
 	// 删除着色器
 	void Delete();
 
-	// 传递参数
-	void SetBool(const std::string& name, bool value) const
+	//Attrubute参数
+	void BindAttribute(const std::string& Name, GLuint Location)
 	{
-		glUniform1i(glGetUniformLocation(ID, name.c_str()), (int)value);
+		glBindAttribLocation(ID, Location, Name.c_str());
 	}
-	void SetInt(const std::string& name, int value) const
+
+	// Uniform参数
+	void UniformInt(const std::string& Name, int Value) const
 	{
-		glUniform1i(glGetUniformLocation(ID, name.c_str()), value);
+		glUniform1i(glGetUniformLocation(ID, Name.c_str()), Value);
 	}
-	void SetFloat(const std::string& name, float value) const
+	void UniformFloat(const std::string& Name, float Value) const
 	{
-		glUniform1f(glGetUniformLocation(ID, name.c_str()), value);
+		glUniform1f(glGetUniformLocation(ID, Name.c_str()), Value);
 	}
 
 private:

@@ -3,6 +3,11 @@
 
 using namespace std;
 
+Shader::Shader()
+{
+	
+}
+
 Shader::Shader(std::string&& VertexPath, string&& FragmentPath)
 {
 	//编译着色器

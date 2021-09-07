@@ -5,6 +5,8 @@
 class Camera
 {
 public:
+
+	Camera();
 	Camera(glm::vec3 InPosition, glm::vec3 InTarget, glm::vec3 InWorldup);
 	Camera(glm::vec3 InPosition, float InPitch, float InYaw, float InRoll, glm::vec3 InWorldUp);
 

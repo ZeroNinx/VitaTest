@@ -38,6 +38,7 @@ set(VITA_MKSFOEX_FLAGS "${VITA_MKSFOEX_FLAGS} -d PARENTAL_LEVEL=1")
 set(VITA_MKSFOEX_FLAGS "${VITA_MKSFOEX_FLAGS} -d ATTRIBUTE2=12")
 
 add_definitions(-D__psp2__)
+add_definitions(-DSTB_IMAGE_IMPLEMENTATION)
 
 # Add any additional include paths here
 include_directories(
@@ -57,12 +58,18 @@ add_executable(${PROJECT_NAME}
   src/Camera.cpp
   src/Shader.cpp
   src/Texture2D.cpp
+  src/Program.cpp
+  src/Program/LearnOpengl.cpp
 
 )
 
 # Library to link to (drop the -l prefix). This will mostly be stubs.
 target_link_libraries(${PROJECT_NAME}
 
+  #SCE
+  SceCtrl_stub
+
+  #PVR_PSP2
   libIMGEGL_stub_weak
   libgpu_es4_ext_stub_weak
   libGLESv2_stub_weak

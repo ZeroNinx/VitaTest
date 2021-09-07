@@ -1,7 +1,5 @@
 #pragma once
-
-#include <PVR_PSP2/GLES2/gl2.h>
-#include<string>
+#include <string>
 
 class Texture2D
 {

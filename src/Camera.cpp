@@ -1,5 +1,10 @@
 #include "Camera.h"
 
+Camera::Camera()
+{
+	
+}
+
 Camera::Camera(glm::vec3 InPosition, glm::vec3 InTarget, glm::vec3 InWorldUp)
 {
 	Positon = InPosition;

@@ -1,12 +1,15 @@
-#include "Texture2D.h"
-
+#include <PVR_PSP2/GLES2/gl2.h>
 #include "stb_image.h"
 #include "util.h"
+#include "Texture2D.h"
 
 using namespace std;
 
 Texture2D::Texture2D(string &&Filename)
 {
+    //防止载入图形时上下颠倒
+	stbi_set_flip_vertically_on_load(true);
+	
     //读取文件
     unsigned char *Data = stbi_load(Filename.c_str(), &Width, &Height, &Channels, 0);
     if (!Data)
