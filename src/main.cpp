@@ -5,7 +5,6 @@ extern "C"
 
 	#include <PVR_PSP2/EGL/eglplatform.h>
 	#include <PVR_PSP2/EGL/egl.h>
-	#include <PVR_PSP2/GLES2/gl2.h>
 	#include <PVR_PSP2/gpu_es4/psp2_pvr_hint.h>
 }
 

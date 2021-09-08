@@ -2,6 +2,8 @@
 extern "C"
 {
     #include <psp2/ctrl.h>
+    #include <PVR_PSP2/GLES2/gl2.h>
+    #include <PVR_PSP2/GLES2/gl2ext.h>
 }
 
 #include <glm/gtc/matrix_transform.hpp>

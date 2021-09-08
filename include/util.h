@@ -7,8 +7,9 @@ extern "C"
 #include <string>
 
 //Attribute对应的Location
-#define AL_Position 0
-#define AL_TexCoord 1
+#define AttributeLocation_Position  0
+#define AttributeLocation_TexCoord  1
+#define AttributeLocation_Normal    2
 
 using namespace std;
 

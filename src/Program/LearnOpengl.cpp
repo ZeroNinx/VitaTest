@@ -1,5 +1,7 @@
 #include "Program/LearnOpengl.h"
 
+using namespace glm;
+
 LearnOpengl::LearnOpengl():Program()
 {
 
@@ -29,8 +31,9 @@ bool LearnOpengl::Init()
     See("Shader program init OK.");
 
     //绑定Location对应的变量
-    DrawShader.BindAttribute("aPos", AL_Position);
-    DrawShader.BindAttribute("aTexCoord", AL_TexCoord);
+    DrawShader.BindAttribute("aPos", AttributeLocation_Position);
+    DrawShader.BindAttribute("aTexCoord", AttributeLocation_TexCoord);
+    DrawShader.BindAttribute("aNormal", AttributeLocation_Normal);
 
     //创建纹理
     BoxTexture =new Texture2D(GetContentPath("Resource/box.jpg"));
@@ -54,7 +57,7 @@ bool LearnOpengl::Init()
     DrawShader.UniformInt("FaceTexture", 1);
 
     //创建相机
-    PlayerCamera = Camera(glm::vec3(0, 0, 3.0f), glm::radians(5.0f), glm::radians(180.0f), 0, glm::vec3(0, 1.0f, 0));
+    PlayerCamera = Camera(glm::vec3(0, 0, 3.0f), 5.0f, 180.0f, 0, glm::vec3(0, 1.0f, 0));
     See("Camera created.");
 
     return true;
@@ -131,10 +134,12 @@ void LearnOpengl::Draw()
     ProcessInput();
 
     //绑定Attribute数据并启用
-    glVertexAttribPointer(AL_Position, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
-    glVertexAttribPointer(AL_TexCoord, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
-    glEnableVertexAttribArray(AL_Position);
-    glEnableVertexAttribArray(AL_TexCoord);
+    glVertexAttribPointer(AttributeLocation_Position, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
+    glVertexAttribPointer(AttributeLocation_TexCoord, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float)));
+    glVertexAttribPointer(AttributeLocation_Normal, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(5 * sizeof(float)));
+    glEnableVertexAttribArray(AttributeLocation_Position);
+    glEnableVertexAttribArray(AttributeLocation_TexCoord);
+    glEnableVertexAttribArray(AttributeLocation_Normal);
 
     //模型矩阵（内部坐标->世界坐标）
     glm::mat4 ModelMat(1.0f);
@@ -148,10 +153,35 @@ void LearnOpengl::Draw()
     glm::mat4 ProjMat(1.0f);
     ProjMat = glm::perspective(glm::radians(45.0f), (float)960 / (float)544, 0.1f, 100.0f);
 
+    //环境光照
+    glm::vec3 AmbientColor = glm::vec3(1.2f, 1.0f, 2.0f);
+    float AmbientStrength = 0.2f;
+
+    //光源
+    glm::vec3 LightPos = glm::vec3(-5.0f, 5.0f, -5.0f);
+    glm::vec3 LightColor = glm::vec3(1.0f, 1.0f, 1.0f);
+    float LightStrength = 0.5;
+
+    //高光
+    float SpecularStrength = 0.01;
+    int SpecularShininessStrength = 32;
+
     //把变量Uniform到Shader
-    glUniformMatrix4fv(glGetUniformLocation(DrawShader.GetID(), "ModelMat"), 1, GL_FALSE, glm::value_ptr(ModelMat));
-    glUniformMatrix4fv(glGetUniformLocation(DrawShader.GetID(), "ViewMat"), 1, GL_FALSE, glm::value_ptr(ViewMat));
-    glUniformMatrix4fv(glGetUniformLocation(DrawShader.GetID(), "ProjMat"), 1, GL_FALSE, glm::value_ptr(ProjMat));
+    DrawShader.UniformFloatMat4("ModelMat", ModelMat);
+    DrawShader.UniformFloatMat4("ViewMat", ViewMat);
+    DrawShader.UniformFloatMat4("ProjMat", ProjMat);
+
+    DrawShader.UniformFloatVec3("AmbientColor", AmbientColor);
+    DrawShader.UniformFloat("AmbientStrength", AmbientStrength);
+
+    DrawShader.UniformFloatVec3("LightColor", LightColor);
+    DrawShader.UniformFloatVec3("LightPos", LightPos);
+    DrawShader.UniformFloat("LightStrength", LightStrength);
+
+    DrawShader.UniformFloat("SpecularStrength", SpecularStrength);
+    DrawShader.UniformInt("SpecularShininessStrength",SpecularShininessStrength);
+
+    DrawShader.UniformFloatVec3("ViewPos", PlayerCamera.GetPosition());
 
     //清除缓冲区
     glClearColor(0.5, 1.0, 1.0, 1.0);
@@ -168,13 +198,17 @@ void LearnOpengl::Draw()
     //绘制10个盒子
     for (int i = 0; i < 10; i++)
     {
-        float Angle = fmod(20.0f * i + 0.02 * cnt, 360.0f);
+        // float Angle = fmod(20.0f * i + 0.02 * cnt, 360.0f);
 
         ModelMat = glm::mat4(1.0f);
         ModelMat = glm::translate(ModelMat, cubePositions[i]);
-        ModelMat = glm::rotate(ModelMat, glm::radians(Angle), glm::vec3(1.0f, 0.3f, 0.5f));
+        //ModelMat = glm::rotate(ModelMat, glm::radians(Angle), glm::vec3(1.0f, 0.3f, 0.5f));
 
-        glUniformMatrix4fv(glGetUniformLocation(DrawShader.GetID(), "ModelMat"), 1, GL_FALSE, glm::value_ptr(ModelMat));
+        DrawShader.UniformFloatMat4("ModelMat",ModelMat);
+
+        glm::mat4 TranspostInverseModelMat = glm::transpose(glm::inverse(ModelMat));
+        DrawShader.UniformFloatMat4("TranspostInverseModelMat", TranspostInverseModelMat);
+
         glDrawArrays(GL_TRIANGLES, 0, 36);
         cnt++;
     }

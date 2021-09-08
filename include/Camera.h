@@ -1,6 +1,6 @@
 #pragma once
-#include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include "util.h"
 
 class Camera
 {
@@ -28,14 +28,17 @@ public:
 	float Pitch;
 	float Yaw;
 	float Roll;
-	float CameraSpeedX = 0.001f;
-	float CameraSpeedY = 0.001f;
+	float CameraSpeedX = 0.02f;
+	float CameraSpeedY = 0.02f;
 	float CameraMoveSpeedX = 0;
 	float CameraMoveSpeedY = 0;
 	float CameraMoveSpeedZ = 0;
 
 	//计算LookAt矩阵
 	glm::mat4 GetViewMatrix();
+
+	//返回相机位置
+	glm::vec3& GetPosition();
 
 	void ProcessMouseMovement(float DeltaX, float DeltaY);
 
