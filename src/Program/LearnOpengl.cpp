@@ -1,7 +1,5 @@
 #include "Program/LearnOpengl.h"
 
-using namespace glm;
-
 LearnOpengl::LearnOpengl():Program()
 {
 
@@ -182,6 +180,16 @@ void LearnOpengl::Draw()
     DrawShader.UniformInt("SpecularShininessStrength",SpecularShininessStrength);
 
     DrawShader.UniformFloatVec3("ViewPos", PlayerCamera.GetPosition());
+
+    //Test
+    glm::vec3 FragPos = glm::vec3(0.3f, 0.3f,-0.5f);
+    glm::vec3 ViewDir = normalize(PlayerCamera.GetPosition() - FragPos);
+    glm::mat4 TranspostInverseModelMatt = glm::transpose(glm::inverse(ModelMat));
+    glm::vec3 NormalDir = normalize(glm::mat3(TranspostInverseModelMatt) * glm::vec3(0,0,-1.0f));
+    glm::vec3 LightDir = normalize(FragPos - LightPos);
+    glm::vec3 ReflectDir = glm::reflect(-LightDir, NormalDir);
+    float SpecularShininess = glm::pow(glm::max(glm::dot(ViewDir, ReflectDir), 0.0f), SpecularShininess);
+    See("SpecularShininess: "+to_string(SpecularShininess));
 
     //清除缓冲区
     glClearColor(0.5, 1.0, 1.0, 1.0);
