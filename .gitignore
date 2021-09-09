@@ -2,5 +2,8 @@
 .vscode
 build/*
 
+psp2cgc.exe
+
 !src/
 !sce_sys/
+
