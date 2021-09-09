@@ -9,11 +9,12 @@ bool LearnOpengl::Init()
 {
 
 #ifdef USE_PVR_PSP2
-	//开启深度缓冲区
-	glEnable(GL_DEPTH_TEST);
 #else
 	vglEnableRuntimeShaderCompiler(GL_TRUE);
 #endif
+
+    //开启深度缓冲区
+	glEnable(GL_DEPTH_TEST);
     See("Preinit OK.");
 
 	//创建VBO
@@ -142,9 +143,15 @@ void LearnOpengl::Draw()
     ProcessInput();
 
     //绑定Attribute数据并启用
-    glVertexAttribPointer(AttributeLocation_Position, 3, GL_FLOAT, GL_TRUE, 8 * sizeof(float), (void *)0);
+#ifdef USE_PVR_PSP2
+	glVertexAttribPointer(AttributeLocation_Position, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
+    glVertexAttribPointer(AttributeLocation_TexCoord, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float)));
+    glVertexAttribPointer(AttributeLocation_Normal, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(5 * sizeof(float)));
+#else
+	glVertexAttribPointer(AttributeLocation_Position, 3, GL_FLOAT, GL_TRUE, 8 * sizeof(float), (void *)0);
     glVertexAttribPointer(AttributeLocation_TexCoord, 2, GL_FLOAT, GL_TRUE, 8 * sizeof(float), (void *)(3 * sizeof(float)));
     glVertexAttribPointer(AttributeLocation_Normal, 3, GL_FLOAT, GL_TRUE, 8 * sizeof(float), (void *)(5 * sizeof(float)));
+#endif
     glEnableVertexAttribArray(AttributeLocation_Position);
     glEnableVertexAttribArray(AttributeLocation_TexCoord);
     glEnableVertexAttribArray(AttributeLocation_Normal);
@@ -168,11 +175,11 @@ void LearnOpengl::Draw()
     //光源
     glm::vec3 LightPos = glm::vec3(-5.0f, 5.0f, -5.0f);
     glm::vec3 LightColor = glm::vec3(1.0f, 1.0f, 1.0f);
-    float LightStrength = 0.5;
+    float LightStrength = 0.5f;
 
     //高光
-    float SpecularStrength = 0.01;
-    int SpecularShininessStrength = 32;
+    float SpecularStrength = 0.01f;
+    float SpecularShininessStrength = 128.0f;
 
     //把变量Uniform到Shader
     DrawShader.UniformFloatMat4("ModelMat", ModelMat);
@@ -187,19 +194,9 @@ void LearnOpengl::Draw()
     DrawShader.UniformFloat("LightStrength", LightStrength);
 
     DrawShader.UniformFloat("SpecularStrength", SpecularStrength);
-    DrawShader.UniformInt("SpecularShininessStrength",SpecularShininessStrength);
+    DrawShader.UniformFloat("SpecularShininessStrength",SpecularShininessStrength);
 
     DrawShader.UniformFloatVec3("ViewPos", PlayerCamera.GetPosition());
-
-    //Test
-    glm::vec3 FragPos = glm::vec3(0.3f, 0.3f,-0.5f);
-    glm::vec3 ViewDir = normalize(PlayerCamera.GetPosition() - FragPos);
-    glm::mat4 TranspostInverseModelMatt = glm::transpose(glm::inverse(ModelMat));
-    glm::vec3 NormalDir = normalize(glm::mat3(TranspostInverseModelMatt) * glm::vec3(0,0,-1.0f));
-    glm::vec3 LightDir = normalize(FragPos - LightPos);
-    glm::vec3 ReflectDir = glm::reflect(-LightDir, NormalDir);
-    float SpecularShininess = glm::pow(glm::max(glm::dot(ViewDir, ReflectDir), 0.0f), SpecularShininess);
-    See("SpecularShininess: "+to_string(SpecularShininess));
 
     //清除缓冲区
     glClearColor(0.5, 1.0, 1.0, 1.0);

@@ -17,7 +17,7 @@ uniform vec3 LightColor; //光源颜色
 uniform float LightStrength; //光照强度
 
 uniform float SpecularStrength; //高光强度
-uniform int SpecularShininessStrength; //泛光度
+uniform float SpecularShininessStrength; //泛光度
 uniform vec3 ViewPos; //视图位置
 
 //自定义纹理混合

@@ -15,12 +15,9 @@ varying vec3 Normal; //法向量
 
 void main()
 {
-   
-    FragPos = vec3(ModelMat * vec4(aPos, 1.0));
-    
-    TexCoord = aTexCoord;
-    Normal = mat3(TranspostInverseModelMat) * aNormal;
-    
     gl_Position = ProjMat * ViewMat * ModelMat * vec4(aPos, 1.0);
-    
+
+    TexCoord = aTexCoord;
+    FragPos = vec3(ModelMat * vec4(aPos, 1.0));
+    Normal = mat3(TranspostInverseModelMat) * aNormal;
 }

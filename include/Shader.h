@@ -53,7 +53,11 @@ public:
 	}
 	void UniformFloatMat4(const std::string& Name, glm::mat4& Value) const
 	{
+#ifdef USE_PVR_PSP2
+		glUniformMatrix4fv(glGetUniformLocation(ID, Name.c_str()), 1, GL_FALSE, glm::value_ptr(Value));
+#else
 		glUniformMatrix4fv(glGetUniformLocation(ID, Name.c_str()), 1, GL_TRUE, glm::value_ptr(Value));
+#endif
 	}
 	void UniformFloatVec3(const std::string& Name, glm::vec3& Value) const
 	{

@@ -1,10 +1,6 @@
-## This file is a quick tutorial on writing CMakeLists for targeting the Vita
 cmake_minimum_required(VERSION 2.8)
+# set(USE_PVR_PSP2 1)
 
-## This includes the Vita toolchain, must go before project definition
-# It is a convenience so you do not have to type
-# -DCMAKE_TOOLCHAIN_FILE=$VITASDK/share/vita.toolchain.cmake for cmake. It is
-# highly recommended that you include this block for all projects.
 if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
   if(DEFINED ENV{VITASDK})
     set(CMAKE_TOOLCHAIN_FILE "$ENV{VITASDK}/share/vita.toolchain.cmake" CACHE PATH "toolchain file")
@@ -13,33 +9,19 @@ if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
   endif()
 endif()
 
-## Define project parameters here
-# Name of the project
 project(VitaTest)
-# This line adds Vita helper macros, must go after project definition in order
-# to build Vita specific artifacts (self/vpk).
 include("${VITASDK}/share/vita.cmake" REQUIRED)
 
-## Configuration options for this app
-# Display name (under bubble in LiveArea)
 set(VITA_APP_NAME "Hello World")
-# Unique ID must be exactly 9 characters. Recommended: XXXXYYYYY where X =
-# unique string of developer and Y = a unique number for this app
 set(VITA_TITLEID  "ZERO00000")
-# Optional version string to show in LiveArea's more info screen
 set(VITA_VERSION  "01.00")
 
-## Flags and includes for building
-# Note that we make sure not to overwrite previous flags
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -ffast-math -mtune=cortex-a9 -mfpu=neon -Wall")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -ffast-math -mtune=cortex-a9 -mfpu=neon -Wall -std=c++11")
-# Optional. You can specify more param.sfo flags this way.
 set(VITA_MKSFOEX_FLAGS "${VITA_MKSFOEX_FLAGS} -d PARENTAL_LEVEL=1")
 set(VITA_MKSFOEX_FLAGS "${VITA_MKSFOEX_FLAGS} -d ATTRIBUTE2=12")
 
-add_definitions(-D__psp2__)
 add_definitions(-DSTB_IMAGE_IMPLEMENTATION)
-# add_definitions(-DUSE_PVR_PSP2)
 
 # Add any additional include paths here
 include_directories(
@@ -63,34 +45,44 @@ add_executable(${PROJECT_NAME}
 
 )
 
+if(DEFINED USE_PVR_PSP2)
+  add_definitions(-DUSE_PVR_PSP2)
+  add_definitions(-D__psp2__)
+  target_link_libraries(${PROJECT_NAME}
+    
+    #SCE
+    SceCtrl_stub
+    SceDisplay_stub
+    
+    #PVR_PSP2
+    libIMGEGL_stub_weak
+    libgpu_es4_ext_stub_weak
+    libGLESv2_stub_weak
+  )
 
-# Library to link to (drop the -l prefix). This will mostly be stubs.
-target_link_libraries(${PROJECT_NAME}
+else()
 
-  #other
-  vitaGL
-  vitashark
-  mathneon
+  target_link_libraries(${PROJECT_NAME}
+    #other
+    vitaGL
+    vitashark
+    mathneon
 
-  #SCE
-  SceAppMgr_stub
-  SceCommonDialog_stub
-  SceCtrl_stub
-  SceDisplay_stub
-  SceGxm_stub
-  SceLibKernel_stub
-  SceKernelDmacMgr_stub
-  ScePvf_stub
-  SceShaccCg_stub
-  SceSysmodule_stub
-  SceVshBridge_stub
+    #SCE
+    SceAppMgr_stub
+    SceCommonDialog_stub
+    SceCtrl_stub
+    SceDisplay_stub
+    SceGxm_stub
+    SceLibKernel_stub
+    SceKernelDmacMgr_stub
+    ScePvf_stub
+    SceShaccCg_stub
+    SceSysmodule_stub
+    SceVshBridge_stub
+  )
 
-  #PVR_PSP2
-  libIMGEGL_stub_weak
-  libgpu_es4_ext_stub_weak
-  libGLESv2_stub_weak
-
-)
+endif()
 
 ## Create Vita files
 vita_create_self(${PROJECT_NAME}.self ${PROJECT_NAME} UNSAFE)

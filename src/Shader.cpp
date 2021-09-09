@@ -60,6 +60,9 @@ Shader::Shader(std::string&& VertexPath, string&& FragmentPath)
 	glShaderSource(VertexShader, 1, &VertexShaderCode, nullptr);
 	glCompileShader(VertexShader);
 
+	See("");
+	See(VertexShaderCode);
+
 	// 打印编译错误（如果有的话）
 	glGetShaderiv(VertexShader, GL_COMPILE_STATUS, &Result);
 	if (Result == GL_FALSE)
@@ -80,6 +83,9 @@ Shader::Shader(std::string&& VertexPath, string&& FragmentPath)
 	}
 	glShaderSource(FragmentShader, 1, &FragmentShaderCode, nullptr);
 	glCompileShader(FragmentShader);
+
+	See("");
+	See(FragmentShaderCode);
 
 	// 打印编译错误（如果有的话）
 	glGetShaderiv(FragmentShader, GL_COMPILE_STATUS, &Result);
