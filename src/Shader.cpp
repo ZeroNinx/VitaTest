@@ -64,6 +64,7 @@ Shader::Shader(std::string&& VertexPath, string&& FragmentPath)
 	glGetShaderiv(VertexShader, GL_COMPILE_STATUS, &Result);
 	if (Result == GL_FALSE)
 	{
+		See("Vertext shader compile Failed.");
 		glGetShaderInfoLog(VertexShader, 512, NULL, ErrMsg);
 		See(ErrMsg);
 		return;
@@ -84,6 +85,7 @@ Shader::Shader(std::string&& VertexPath, string&& FragmentPath)
 	glGetShaderiv(FragmentShader, GL_COMPILE_STATUS, &Result);
 	if (Result == GL_FALSE)
 	{
+		See("Fragment shader compile Failed.");
 		glGetShaderInfoLog(FragmentShader, 512, NULL, ErrMsg);
 		See(ErrMsg);
 		return;

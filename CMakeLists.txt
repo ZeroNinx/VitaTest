@@ -39,6 +39,7 @@ set(VITA_MKSFOEX_FLAGS "${VITA_MKSFOEX_FLAGS} -d ATTRIBUTE2=12")
 
 add_definitions(-D__psp2__)
 add_definitions(-DSTB_IMAGE_IMPLEMENTATION)
+# add_definitions(-DUSE_PVR_PSP2)
 
 # Add any additional include paths here
 include_directories(
@@ -58,16 +59,31 @@ add_executable(${PROJECT_NAME}
   src/Camera.cpp
   src/Shader.cpp
   src/Texture2D.cpp
-  src/Program.cpp
   src/Program/LearnOpengl.cpp
 
 )
 
+
 # Library to link to (drop the -l prefix). This will mostly be stubs.
 target_link_libraries(${PROJECT_NAME}
 
+  #other
+  vitaGL
+  vitashark
+  mathneon
+
   #SCE
+  SceAppMgr_stub
+  SceCommonDialog_stub
   SceCtrl_stub
+  SceDisplay_stub
+  SceGxm_stub
+  SceLibKernel_stub
+  SceKernelDmacMgr_stub
+  ScePvf_stub
+  SceShaccCg_stub
+  SceSysmodule_stub
+  SceVshBridge_stub
 
   #PVR_PSP2
   libIMGEGL_stub_weak
@@ -99,6 +115,8 @@ vita_create_vpk(${PROJECT_NAME}.vpk ${VITA_TITLEID} ${PROJECT_NAME}.self
   #Shader
   FILE data/Shader/VertexShader.glsl data/Shader/VertexShader.glsl
   FILE data/Shader/FragmentShader.glsl data/Shader/FragmentShader.glsl
+  FILE data/Shader/VertexShader.cg data/Shader/VertexShader.cg
+  FILE data/Shader/FragmentShader.cg data/Shader/FragmentShader.cg
 
   #Resource
   FILE data/Resource/face.png data/Resource/face.png 

@@ -1,0 +1,53 @@
+
+//自定义纹理混合
+float4 mix(float4 ColorA, float4 ColorB, float MixValue)
+{
+    return float4( ColorA.rgb * MixValue + ColorB.rgb * (1.0 - MixValue), 1.0);
+}
+
+void main
+(
+    in float3 FragPos, //片段位置
+    in float2 TexCoord : TEXCOORD0, //纹理坐标
+    in float3 Normal, //法向量
+
+    uniform sampler2D BoxTexture, //盒子贴图
+    uniform sampler2D FaceTexture, //脸贴图
+
+    uniform float3 AmbientColor, //环境颜色
+    uniform float AmbientStrength, //环境光强
+
+    uniform float3 LightPos, //光源位置
+    uniform float3 LightColor, //光源颜色
+    uniform float LightStrength, //光照强度
+
+    uniform float SpecularStrength, //高光强度
+    uniform int SpecularShininessStrength, //泛光度
+    uniform float3 ViewPos, //视图位置
+
+    out float4 gl_FragColor : COLOR //片段颜色
+)
+{
+    //计算纹理颜色
+    float4 FaceColor = tex2D(FaceTexture, TexCoord);
+    float4 BoxColor = tex2D(BoxTexture, TexCoord);
+    float4 TextureColor = mix(FaceColor, BoxColor, sign(FaceColor.a));
+
+    //环境光照
+    float3 FinalAmbient = AmbientStrength * AmbientColor;
+    
+    //漫反射
+    float3 NormalDir = normalize(Normal);
+    float3 LightDir = normalize(FragPos - LightPos);
+    float DiffStrength = max(dot(NormalDir, LightDir), 0.0);
+    float3 FinalDiffuse = DiffStrength * LightStrength * LightColor;
+
+    //高光处理
+    float3 ViewDir = normalize(ViewPos - FragPos);
+    float3 ReflectDir = reflect(-LightDir, NormalDir);
+    float SpecularShininess = pow(max(dot(ViewDir, ReflectDir), 0.0), SpecularShininessStrength);
+    float3 FinalSpecular = SpecularStrength * SpecularShininess * LightStrength * LightColor;
+    
+    gl_FragColor = TextureColor * float4( FinalAmbient + FinalDiffuse + FinalSpecular, 1.0);
+
+}

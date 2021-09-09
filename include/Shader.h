@@ -1,6 +1,15 @@
 #pragma once
 
-#include <PVR_PSP2/GLES2/gl2.h>
+extern "C"
+{
+#ifdef USE_PVR_PSP2
+	#include <PVR_PSP2/GLES2/gl2.h>
+    #include <PVR_PSP2/GLES2/gl2ext.h>
+#else
+	#include <vitaGL.h>
+#endif
+}
+
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <string>
@@ -44,7 +53,7 @@ public:
 	}
 	void UniformFloatMat4(const std::string& Name, glm::mat4& Value) const
 	{
-		glUniformMatrix4fv(glGetUniformLocation(ID, Name.c_str()), 1, GL_FALSE, glm::value_ptr(Value));
+		glUniformMatrix4fv(glGetUniformLocation(ID, Name.c_str()), 1, GL_TRUE, glm::value_ptr(Value));
 	}
 	void UniformFloatVec3(const std::string& Name, glm::vec3& Value) const
 	{

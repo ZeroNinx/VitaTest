@@ -1,0 +1,16 @@
+void main
+(
+    float3 aPos,
+    float2 aTexCoord,
+    
+    float4 out gl_Position,
+    float2 out TexCoord,
+
+    uniform float4x4 ModelMat,
+    uniform float4x4 ViewMat,
+    uniform float4x4 ProjMat
+)
+{
+    gl_Position = mul(mul(mul(ProjMat, ViewMat), ModelMat), float4(aPos, 1.0));
+    TexCoord = aTexCoord;
+}

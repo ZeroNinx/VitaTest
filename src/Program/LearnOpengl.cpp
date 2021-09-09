@@ -8,8 +8,13 @@ LearnOpengl::LearnOpengl():Program()
 bool LearnOpengl::Init()
 {
 
+#ifdef USE_PVR_PSP2
 	//开启深度缓冲区
 	glEnable(GL_DEPTH_TEST);
+#else
+	vglEnableRuntimeShaderCompiler(GL_TRUE);
+#endif
+    See("Preinit OK.");
 
 	//创建VBO
 	glGenBuffers(1, &VBO);
@@ -19,7 +24,12 @@ bool LearnOpengl::Init()
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     //初始化着色器
+#ifdef USE_PVR_PSP2
     DrawShader = Shader(GetContentPath("Shader/VertexShader.glsl"), GetContentPath("Shader/FragmentShader.glsl"));
+#else
+	DrawShader = Shader(GetContentPath("Shader/VertexShader.cg"), GetContentPath("Shader/FragmentShader.cg"));
+#endif
+    
     if (!DrawShader.IsValid())
     {
         See("Shader init failed");
@@ -132,9 +142,9 @@ void LearnOpengl::Draw()
     ProcessInput();
 
     //绑定Attribute数据并启用
-    glVertexAttribPointer(AttributeLocation_Position, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
-    glVertexAttribPointer(AttributeLocation_TexCoord, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float)));
-    glVertexAttribPointer(AttributeLocation_Normal, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(5 * sizeof(float)));
+    glVertexAttribPointer(AttributeLocation_Position, 3, GL_FLOAT, GL_TRUE, 8 * sizeof(float), (void *)0);
+    glVertexAttribPointer(AttributeLocation_TexCoord, 2, GL_FLOAT, GL_TRUE, 8 * sizeof(float), (void *)(3 * sizeof(float)));
+    glVertexAttribPointer(AttributeLocation_Normal, 3, GL_FLOAT, GL_TRUE, 8 * sizeof(float), (void *)(5 * sizeof(float)));
     glEnableVertexAttribArray(AttributeLocation_Position);
     glEnableVertexAttribArray(AttributeLocation_TexCoord);
     glEnableVertexAttribArray(AttributeLocation_Normal);

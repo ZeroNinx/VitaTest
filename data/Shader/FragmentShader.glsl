@@ -45,7 +45,7 @@ void main()
     //高光处理
     vec3 ViewDir = normalize(ViewPos - FragPos);
     vec3 ReflectDir = reflect(-LightDir, NormalDir);
-    float SpecularShininess = pow(max(dot(ViewDir, ReflectDir), 0.0), SpecularShininess);
+    float SpecularShininess = pow(max(dot(ViewDir, ReflectDir), 0.0), SpecularShininessStrength);
     vec3 FinalSpecular = SpecularStrength * SpecularShininess * LightStrength * LightColor;
     
     gl_FragColor = TextureColor * vec4( (FinalAmbient + FinalDiffuse + FinalSpecular), 1.0);

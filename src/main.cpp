@@ -3,9 +3,14 @@ extern "C"
 	#include <psp2/kernel/modulemgr.h>
 	#include <psp2/kernel/processmgr.h>
 
+#ifdef USE_PVR_PSP2
 	#include <PVR_PSP2/EGL/eglplatform.h>
 	#include <PVR_PSP2/EGL/egl.h>
 	#include <PVR_PSP2/gpu_es4/psp2_pvr_hint.h>
+#else
+	#include <vitaGL.h>
+#endif
+
 }
 
 #include "Program/LearnOpengl.h"
@@ -20,6 +25,8 @@ using namespace std;
 //SCE
 int _newlib_heap_size_user   = 16 * 1024 * 1024;
 unsigned int sceLibcHeapSize = 8 * 1024 * 1024;
+
+#ifdef USE_PVR_PSP2
 
 //EGL
 EGLDisplay Display;
@@ -42,13 +49,6 @@ EGLint ContextAttributeList[] =
 	EGL_CONTEXT_CLIENT_VERSION, 2,
 	EGL_NONE
 };
-
-//SCE初始化
-void SCEInit()
-{
-	sceCtrlSetSamplingMode(SCE_CTRL_MODE_ANALOG);
-	See("SCE init OK");
-}
 
 //Module初始化
 void ModuleInit()
@@ -122,20 +122,40 @@ void EGLEnd()
 	See("EGL terminated.");
 }
 
+//SCE初始化
+void SCEInit()
+{
+	sceCtrlSetSamplingMode(SCE_CTRL_MODE_ANALOG);
+	See("SCE init OK");
+}
+
+#endif
+
 int main()
 {
+
+#ifdef USE_PVR_PSP2
 	//全局初始化
 	ModuleInit();
 	PVR_PSP2Init();
 	EGLInit();
 	SCEInit();
+#else
+	vglInit(0x100000);
+	See("VGL init OK.");
+#endif
+
 	See("All init OK.");
 
 	//程序创建
 	Program* MainProgram = new LearnOpengl();
 	if( !MainProgram->Init())
 	{
+#ifdef USE_PVR_PSP2
 		EGLEnd();
+#else
+		vglEnd();
+#endif
 		return -1;
 	}
 	See("LearnOpengl init OK.");
@@ -148,12 +168,21 @@ int main()
 
 		//绘画
 		MainProgram->Draw();
-		
+
+#ifdef USE_PVR_PSP2
 		//显示
 		eglSwapBuffers(Display,Surface);
+#else 
+		vglSwapBuffers(GL_FALSE);
+#endif
 	}
 
+#ifdef USE_PVR_PSP2
 	EGLEnd();
+#else
+	vglEnd();
+#endif
+
 	sceKernelExitProcess(0);
 	return 0;
 }
