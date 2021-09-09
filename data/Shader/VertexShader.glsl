@@ -7,7 +7,7 @@ attribute vec3 aNormal; //法向量
 uniform mat4 ModelMat; //模型矩阵
 uniform mat4 ViewMat; //相机矩阵
 uniform mat4 ProjMat; //投影矩阵
-uniform mat4 TranspostInverseModelMat;//模型矩阵左上角的逆矩阵的转矩阵（用于计算法向量）
+uniform mat4 TranspostInverseModelMat; //模型矩阵左上角的逆矩阵的转矩阵（用于计算法向量）
 
 varying vec3 FragPos; //片段位置
 varying vec2 TexCoord; //纹理坐标

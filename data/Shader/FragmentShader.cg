@@ -6,10 +6,10 @@ float4 mix(float4 ColorA, float4 ColorB, float MixValue)
 }
 
 void main
-(
-    in float3 FragPos, //片段位置
+(    
     in float2 TexCoord : TEXCOORD0, //纹理坐标
-    in float3 Normal, //法向量
+    in float3 FragPos : TEXCOORD1, //片段位置
+    in float3 Normal : TEXCOORD2, //法向量
 
     uniform sampler2D BoxTexture, //盒子贴图
     uniform sampler2D FaceTexture, //脸贴图

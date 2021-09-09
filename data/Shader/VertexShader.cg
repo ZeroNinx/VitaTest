@@ -1,18 +1,18 @@
 void main
 (
-    float3 aPos,
-    float2 aTexCoord,
-    float3 aNormal,
+    in float3 aPos, //顶点位置
+    in float2 aTexCoord, //纹理坐标
+    in float3 aNormal, //法向量
     
-    float4 out gl_Position: POSITION,
-    float2 out TexCoord: TEXCOORD0,
-    float3 out FragPos,
-    float3 out Normal,
+    out float4 gl_Position: POSITION, //顶点坐标
+    out float2 TexCoord: TEXCOORD0, //纹理坐标
+    out float3 FragPos: TEXCOORD1, //片段位置
+    out float3 Normal: TEXCOORD2, //法向量
 
-    uniform float4x4 ModelMat,
-    uniform float4x4 ViewMat,
-    uniform float4x4 ProjMat,
-    uniform float4x4 TranspostInverseModelMat
+    uniform float4x4 ModelMat, //模型矩阵
+    uniform float4x4 ViewMat, //相机矩阵
+    uniform float4x4 ProjMat, //投影矩阵
+    uniform float4x4 TranspostInverseModelMat //模型矩阵左上角的逆矩阵的转矩阵（用于计算法向量）
 )
 {
  

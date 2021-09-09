@@ -121,6 +121,7 @@ void EGLEnd()
   	eglTerminate(Display);
 	See("EGL terminated.");
 }
+#endif
 
 //SCE初始化
 void SCEInit()
@@ -129,7 +130,7 @@ void SCEInit()
 	See("SCE init OK");
 }
 
-#endif
+
 
 int main()
 {
@@ -139,12 +140,11 @@ int main()
 	ModuleInit();
 	PVR_PSP2Init();
 	EGLInit();
-	SCEInit();
 #else
 	vglInit(0x100000);
 	See("VGL init OK.");
 #endif
-
+	SCEInit();
 	See("All init OK.");
 
 	//程序创建

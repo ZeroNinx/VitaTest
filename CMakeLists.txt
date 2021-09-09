@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
-# set(USE_PVR_PSP2 1)
+set(USE_PVR_PSP2 1)
 
 if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
   if(DEFINED ENV{VITASDK})

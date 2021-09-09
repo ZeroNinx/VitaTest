@@ -178,7 +178,7 @@ void LearnOpengl::Draw()
     float LightStrength = 0.5f;
 
     //高光
-    float SpecularStrength = 0.01f;
+    float SpecularStrength = 1.0f;
     float SpecularShininessStrength = 128.0f;
 
     //把变量Uniform到Shader
